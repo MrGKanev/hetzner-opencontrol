@@ -16,8 +16,11 @@ import ServerDetailScreen from '../screens/servers/ServerDetailScreen';
 import ServerMetricsScreen from '../screens/servers/ServerMetricsScreen';
 import VncConsoleScreen from '../screens/servers/VncConsoleScreen';
 import CreateServerScreen from '../screens/servers/CreateServerScreen';
+import SshKeyListScreen from '../screens/servers/SshKeyListScreen';
+import ImagesScreen from '../screens/servers/ImagesScreen';
 import VolumeListScreen from '../screens/volumes/VolumeListScreen';
-import StorageBoxListScreen from '../screens/storage/StorageBoxListScreen';
+// TODO: Storage Boxes require Hetzner Robot API (separate credentials) — implement later
+// import StorageBoxListScreen from '../screens/storage/StorageBoxListScreen';
 import NetworkingNavigator from './NetworkingNavigator';
 import SettingsScreen from '../screens/settings/SettingsScreen';
 
@@ -36,12 +39,14 @@ export type MainTabParamList = {
   Servers: undefined;
   Networking: undefined;
   Volumes: undefined;
-  StorageBoxes: undefined;
+  // StorageBoxes: undefined; // TODO: Robot API
 };
 
 export type ServersStackParamList = {
   ServersMenu: undefined;
   ServerList: undefined;
+  SshKeyList: undefined;
+  Images: undefined;
 };
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
@@ -53,6 +58,8 @@ function ServersNavigator() {
     <ServersStack.Navigator screenOptions={{ headerShown: false }}>
       <ServersStack.Screen name="ServersMenu" component={ServersMenuScreen} />
       <ServersStack.Screen name="ServerList" component={ServerListScreen} />
+      <ServersStack.Screen name="SshKeyList" component={SshKeyListScreen} />
+      <ServersStack.Screen name="Images" component={ImagesScreen} />
     </ServersStack.Navigator>
   );
 }
@@ -105,14 +112,7 @@ function MainTabs() {
           tabBarIcon: ({ color, size }) => <Icon name="harddisk" color={color} size={size} />,
         }}
       />
-      <Tab.Screen
-        name="StorageBoxes"
-        component={StorageBoxListScreen}
-        options={{
-          title: 'Storage',
-          tabBarIcon: ({ color, size }) => <Icon name="database-outline" color={color} size={size} />,
-        }}
-      />
+      {/* TODO: StorageBoxes tab — needs Robot API integration */}
     </Tab.Navigator>
   );
 }

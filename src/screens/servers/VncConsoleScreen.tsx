@@ -13,6 +13,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import type { RootStackParamList } from '../../navigation';
 import { requestConsole } from '../../api/servers';
+import { novncHtml, buildNovncHash } from '../../assets/novncHtml';
 import { Spacing, BorderRadius, Typography } from '../../theme';
 import type { ThemeColors } from '../../theme';
 import { useColors } from '../../store/themeStore';
@@ -35,10 +36,7 @@ export default function VncConsoleScreen({ route, navigation }: Props) {
     setLoading(true);
     try {
       const { wss_url, password } = await requestConsole(serverId);
-      // Build noVNC URL — use a self-hosted or bundled noVNC page
-      // The URL is the Hetzner WSS endpoint, we wrap it with noVNC
-      const novncUrl = buildNoVncUrl(wss_url, password);
-      setConsoleUrl(novncUrl);
+      setConsoleUrl(buildNovncHash(wss_url, password));
     } catch (e: any) {
       Alert.alert('Error', e.message, [{ text: 'Close', onPress: () => navigation.goBack() }]);
     } finally {
@@ -74,7 +72,7 @@ export default function VncConsoleScreen({ route, navigation }: Props) {
         </View>
       ) : consoleUrl ? (
         <WebView
-          source={{ uri: consoleUrl }}
+          source={{ html: novncHtml, baseUrl: consoleUrl }}
           style={styles.webview}
           onLoadStart={() => setConnected(false)}
           onLoadEnd={() => setConnected(true)}
@@ -82,6 +80,7 @@ export default function VncConsoleScreen({ route, navigation }: Props) {
           domStorageEnabled
           allowsInlineMediaPlayback
           mediaPlaybackRequiresUserAction={false}
+          originWhitelist={['*']}
         />
       ) : null}
 
@@ -93,13 +92,6 @@ export default function VncConsoleScreen({ route, navigation }: Props) {
   );
 }
 
-function buildNoVncUrl(wssUrl: string, password: string): string {
-  // Uses the public noVNC web client hosted at novnc.com
-  // or can be self-hosted/bundled in assets
-  const encoded = encodeURIComponent(wssUrl);
-  const encodedPass = encodeURIComponent(password);
-  return `https://novnc.com/noVNC/vnc.html?autoconnect=true&reconnect=true&password=${encodedPass}&path=${encoded}`;
-}
 
 const makeStyles = (c: ThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: c.background },

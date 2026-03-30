@@ -20,6 +20,7 @@ export default function NetworkingMenuScreen() {
     { label: 'Load Balancers', icon: '⚖️', screen: 'LoadBalancerList' as const },
     { label: 'Firewalls', icon: '🔥', screen: 'FirewallList' as const },
     { label: 'Private Networks', icon: '🔗', screen: 'NetworkList' as const },
+    { label: 'Floating IPs', icon: '🌐', screen: 'FloatingIpList' as const },
   ];
 
   return (

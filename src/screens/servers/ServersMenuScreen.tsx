@@ -7,9 +7,9 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Spacing, BorderRadius, Typography } from '../../theme';
 import type { ThemeColors } from '../../theme';
 import { useColors } from '../../store/themeStore';
-import type { RootStackParamList } from '../../navigation';
+import type { ServersStackParamList } from '../../navigation';
 
-type Nav = NativeStackNavigationProp<RootStackParamList>;
+type Nav = NativeStackNavigationProp<ServersStackParamList>;
 
 interface MenuItem {
   label: string;
@@ -23,10 +23,10 @@ export default function ServersMenuScreen() {
   const styles = makeStyles(colors);
 
   const items: MenuItem[] = [
-    { label: 'All Servers', icon: '🖥', onPress: () => (navigation as any).navigate('ServerList') },
+    { label: 'All Servers', icon: '🖥', onPress: () => navigation.navigate('ServerList') },
+    { label: 'SSH Keys', icon: '🔑', onPress: () => navigation.navigate('SshKeyList') },
+    { label: 'Snapshots & Backups', icon: '📷', onPress: () => navigation.navigate('Images') },
     { label: 'Activities', icon: '⚡️', onPress: () => {} },
-    { label: 'Snapshots', icon: '📷', onPress: () => {} },
-    { label: 'Backups', icon: '🗄', onPress: () => {} },
     { label: 'Placement Groups', icon: '⊞', onPress: () => {} },
     { label: 'Primary IPs', icon: '🌐', onPress: () => {} },
   ];

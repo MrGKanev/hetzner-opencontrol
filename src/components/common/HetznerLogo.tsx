@@ -7,26 +7,18 @@ interface Props {
 }
 
 /**
- * Hetzner brand mark — "H" with right-pointing chevron (>) crossbar.
- * ViewBox 0 0 100 100.
- *
- * Structure:
- *  - Left vertical bar  (x 0–28)
- *  - Right vertical bar (x 72–100)
- *  - Upper diagonal strip in gap: (28,0)→(72,0)→(72,50)→(28,30)
- *  - Lower diagonal strip in gap: (28,100)→(72,100)→(72,50)→(28,70)
+ * Official Hetzner "H" mark.
+ * Source: https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/hetzner.svg
+ * ViewBox 0 0 24 24 — square border + H letterform, fill-rule evenodd.
  */
 export default function HetznerLogo({ size = 64, color = '#E2001A' }: Props) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 100 100">
-      {/* Left bar */}
-      <Path d="M0 0 H28 V100 H0 Z" fill={color} />
-      {/* Right bar */}
-      <Path d="M72 0 H100 V100 H72 Z" fill={color} />
-      {/* Upper chevron arm */}
-      <Path d="M28 0 L72 0 L72 50 L28 30 Z" fill={color} />
-      {/* Lower chevron arm */}
-      <Path d="M28 100 L72 100 L72 50 L28 70 Z" fill={color} />
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Path
+        fill={color}
+        fillRule="evenodd"
+        d="M0 0v24h24V0H0zm4.602 4.025h2.244c.509 0 .716.215.716.717v5.64h8.883v-5.64c0-.509.215-.717.717-.717h2.229c.5 0 .71.23.724.717v14.516c0 .509-.215.717-.717.717h-2.23c-.51 0-.717-.215-.717-.717v-5.735H7.562v5.735c0 .516-.215.717-.716.717H4.602c-.51 0-.717-.208-.717-.717V4.742c0-.509.207-.717.717-.717z"
+      />
     </Svg>
   );
 }
