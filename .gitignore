@@ -1,0 +1,64 @@
+# Dependencies
+node_modules/
+
+# Ideas / notes
+/ideas
+
+# Metro
+.metro-cache/
+.metro-health-check*
+
+# Build outputs
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties
+ios/build/
+ios/Pods/
+ios/DerivedData/
+*.ipa
+*.apk
+*.aab
+
+# CocoaPods
+ios/Podfile.lock
+
+# Xcode
+*.xcworkspace
+!ios/*.xcworkspace
+xcuserdata/
+*.xccheckout
+*.moved-to-trash
+
+# Gradle
+.gradle/
+
+# React Native
+.bundle/
+buck-out/
+.buckd/
+.buckconfig.local
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# TypeScript
+*.tsbuildinfo
