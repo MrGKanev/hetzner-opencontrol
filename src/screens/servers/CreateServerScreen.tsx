@@ -16,7 +16,9 @@ import type { RootStackParamList } from '../../navigation';
 import { getServerTypes, getImages, createServer } from '../../api/servers';
 import { getLocations } from '../../api/locations';
 import { useServerStore } from '../../store/serverStore';
-import { Colors, Spacing, BorderRadius, Typography } from '../../theme';
+import { Spacing, BorderRadius, Typography } from '../../theme';
+import type { ThemeColors } from '../../theme';
+import { useColors } from '../../store/themeStore';
 import type { Location, ServerType, Image } from '../../models';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CreateServer'>;
@@ -35,6 +37,8 @@ export default function CreateServerScreen({ navigation }: Props) {
 
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const colors = useColors();
+  const styles = makeStyles(colors);
 
   const { refreshServers } = useServerStore();
 
@@ -73,7 +77,7 @@ export default function CreateServerScreen({ navigation }: Props) {
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <ActivityIndicator color={Colors.primary} style={{ marginTop: 40 }} />
+        <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
       </SafeAreaView>
     );
   }
@@ -93,7 +97,7 @@ export default function CreateServerScreen({ navigation }: Props) {
         <Text style={styles.title}>New Server</Text>
         <TouchableOpacity onPress={handleCreate} disabled={creating}>
           {creating
-            ? <ActivityIndicator color={Colors.primary} size="small" />
+            ? <ActivityIndicator color={colors.primary} size="small" />
             : <Text style={styles.createText}>Create</Text>
           }
         </TouchableOpacity>
@@ -106,7 +110,7 @@ export default function CreateServerScreen({ navigation }: Props) {
           <TextInput
             style={styles.input}
             placeholder="my-server"
-            placeholderTextColor={Colors.textMuted}
+            placeholderTextColor={colors.textMuted}
             value={name}
             onChangeText={setName}
             autoCapitalize="none"
@@ -176,8 +180,8 @@ export default function CreateServerScreen({ navigation }: Props) {
 
 function capitalize(s: string) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+const makeStyles = (c: ThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -185,47 +189,47 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.cardBorder,
+    borderBottomColor: c.cardBorder,
   },
-  cancelText: { color: Colors.primary, fontSize: 17 },
-  title: { ...Typography.h3 },
-  createText: { color: Colors.textPrimary, fontSize: 17, fontWeight: '600' },
+  cancelText: { color: c.primary, fontSize: 17 },
+  title: { ...Typography.h3, color: c.textPrimary },
+  createText: { color: c.textPrimary, fontSize: 17, fontWeight: '600' },
   content: { padding: Spacing.lg, gap: Spacing.lg },
   section: { gap: Spacing.sm },
-  sectionLabel: { ...Typography.label },
+  sectionLabel: { ...Typography.label, color: c.textSecondary },
   input: {
-    backgroundColor: Colors.card,
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
+    borderColor: c.cardBorder,
     borderRadius: BorderRadius.md,
-    color: Colors.textPrimary,
+    color: c.textPrimary,
     padding: Spacing.md,
     fontSize: 15,
   },
   optionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
   optionCard: {
-    backgroundColor: Colors.card,
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
+    borderColor: c.cardBorder,
     borderRadius: BorderRadius.md,
     padding: Spacing.md,
     minWidth: '47%',
   },
-  optionCardSelected: { borderColor: Colors.primary },
-  optionTitle: { ...Typography.body, fontWeight: '600' },
-  optionSub: { ...Typography.bodySmall, marginTop: 2 },
+  optionCardSelected: { borderColor: c.primary },
+  optionTitle: { ...Typography.body, color: c.textPrimary, fontWeight: '600' },
+  optionSub: { ...Typography.bodySmall, color: c.textSecondary, marginTop: 2 },
   typeRow: {
-    backgroundColor: Colors.card,
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
+    borderColor: c.cardBorder,
     borderRadius: BorderRadius.md,
     padding: Spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
   },
-  typeRowSelected: { borderColor: Colors.primary },
+  typeRowSelected: { borderColor: c.primary },
   typeInfo: { flex: 1 },
-  typeName: { ...Typography.body, fontWeight: '600' },
-  typeSpecs: { ...Typography.bodySmall, marginTop: 2 },
-  checkmark: { color: Colors.primary, fontSize: 18, fontWeight: '700' },
+  typeName: { ...Typography.body, color: c.textPrimary, fontWeight: '600' },
+  typeSpecs: { ...Typography.bodySmall, color: c.textSecondary, marginTop: 2 },
+  checkmark: { color: c.primary, fontSize: 18, fontWeight: '700' },
 });

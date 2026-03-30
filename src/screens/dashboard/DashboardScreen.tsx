@@ -17,7 +17,9 @@ import { useServerStore } from '../../store/serverStore';
 import { getLocations } from '../../api/locations';
 import { getFloatingIPs, getPrimaryIPs, getLoadBalancers, getFirewalls, getNetworks } from '../../api/networking';
 import { getVolumes } from '../../api/volumes';
-import { Colors, Spacing, BorderRadius, Typography } from '../../theme';
+import { Spacing, BorderRadius, Typography } from '../../theme';
+import type { ThemeColors } from '../../theme';
+import { useColors } from '../../store/themeStore';
 import GlobeView, { type GlobeMarker as MapMarker } from '../../components/common/GlobeView';
 import type { RootStackParamList } from '../../navigation';
 import type { Location } from '../../models';
@@ -40,6 +42,8 @@ export default function DashboardScreen() {
   const [counts, setCounts] = useState<ResourceCounts | null>(null);
   const [mapMarkers, setMapMarkers] = useState<MapMarker[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const colors = useColors();
+  const styles = makeStyles(colors);
 
   const loadData = useCallback(async () => {
     await fetchServers();
@@ -90,13 +94,13 @@ export default function DashboardScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
       >
         <View style={styles.header}>
           <View style={styles.brandRow}>
             <View style={styles.brandIcon}>
-              <Icon name="cloud-outline" size={22} color={Colors.primary} />
+              <Icon name="cloud-outline" size={22} color={colors.primary} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.brandName}>OpenControl</Text>
@@ -106,7 +110,7 @@ export default function DashboardScreen() {
               onPress={() => navigation.navigate('Settings')}
               style={styles.settingsBtn}
             >
-              <Icon name="cog-outline" size={20} color={Colors.textSecondary} />
+              <Icon name="cog-outline" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
         </View>
@@ -120,16 +124,16 @@ export default function DashboardScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>ALL LOCATIONS</Text>
           {isLoading && !counts ? (
-            <ActivityIndicator color={Colors.primary} style={{ marginTop: Spacing.lg }} />
+            <ActivityIndicator color={colors.primary} style={{ marginTop: Spacing.lg }} />
           ) : (
             <View style={styles.grid}>
-              <ResourceCard label="Servers" count={counts?.servers ?? 0} />
-              <ResourceCard label="Load Balancers" count={counts?.loadBalancers ?? 0} />
-              <ResourceCard label="Primary IPs" count={counts?.primaryIPs ?? 0} />
-              <ResourceCard label="Floating IPs" count={counts?.floatingIPs ?? 0} />
-              <ResourceCard label="Volumes" count={counts?.volumes ?? 0} />
-              <ResourceCard label="Firewalls" count={counts?.firewalls ?? 0} />
-              <ResourceCard label="Networks" count={counts?.networks ?? 0} />
+              <ResourceCard label="Servers" count={counts?.servers ?? 0} colors={colors} />
+              <ResourceCard label="Load Balancers" count={counts?.loadBalancers ?? 0} colors={colors} />
+              <ResourceCard label="Primary IPs" count={counts?.primaryIPs ?? 0} colors={colors} />
+              <ResourceCard label="Floating IPs" count={counts?.floatingIPs ?? 0} colors={colors} />
+              <ResourceCard label="Volumes" count={counts?.volumes ?? 0} colors={colors} />
+              <ResourceCard label="Firewalls" count={counts?.firewalls ?? 0} colors={colors} />
+              <ResourceCard label="Networks" count={counts?.networks ?? 0} colors={colors} />
             </View>
           )}
         </View>
@@ -138,7 +142,8 @@ export default function DashboardScreen() {
   );
 }
 
-function ResourceCard({ label, count }: { label: string; count: number }) {
+function ResourceCard({ label, count, colors }: { label: string; count: number; colors: ThemeColors }) {
+  const styles = makeStyles(colors);
   return (
     <View style={styles.resourceCard}>
       <Text style={styles.resourceCount}>{count}</Text>
@@ -147,8 +152,8 @@ function ResourceCard({ label, count }: { label: string; count: number }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+const makeStyles = (c: ThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   header: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
@@ -158,9 +163,9 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: BorderRadius.full,
-    backgroundColor: Colors.card,
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
+    borderColor: c.cardBorder,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -168,34 +173,34 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: BorderRadius.md,
-    backgroundColor: Colors.card,
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
+    borderColor: c.cardBorder,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  brandName: { ...Typography.h2, lineHeight: 22 },
-  brandSub: { ...Typography.caption, color: Colors.textMuted, marginTop: 1 },
+  brandName: { ...Typography.h2, color: c.textPrimary, lineHeight: 22 },
+  brandSub: { ...Typography.caption, color: c.textMuted, marginTop: 1 },
   mapContainer: {
     marginHorizontal: Spacing.lg,
     borderRadius: BorderRadius.lg,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
+    borderColor: c.cardBorder,
   },
   section: { padding: Spacing.lg },
-  sectionLabel: { ...Typography.label, marginBottom: Spacing.md },
+  sectionLabel: { ...Typography.label, color: c.textSecondary, marginBottom: Spacing.md },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
   resourceCard: {
-    backgroundColor: Colors.card,
+    backgroundColor: c.card,
     borderRadius: BorderRadius.md,
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
+    borderColor: c.cardBorder,
     padding: Spacing.md,
     width: '47%',
     minHeight: 72,
     justifyContent: 'center',
   },
-  resourceCount: { fontSize: 28, fontWeight: '700', color: Colors.textPrimary },
-  resourceLabel: { ...Typography.bodySmall, marginTop: 2 },
+  resourceCount: { fontSize: 28, fontWeight: '700', color: c.textPrimary },
+  resourceLabel: { ...Typography.bodySmall, color: c.textSecondary, marginTop: 2 },
 });

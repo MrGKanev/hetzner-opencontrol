@@ -5,7 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useAuthStore } from '../store/authStore';
-import { Colors } from '../theme';
+import { useColors } from '../store/themeStore';
 
 // Screens
 import LoginScreen from '../screens/auth/LoginScreen';
@@ -58,17 +58,18 @@ function ServersNavigator() {
 }
 
 function MainTabs() {
+  const colors = useColors();
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: Colors.surface,
-          borderTopColor: Colors.cardBorder,
+          backgroundColor: colors.surface,
+          borderTopColor: colors.cardBorder,
           borderTopWidth: 1,
         },
-        tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: Colors.textMuted,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textMuted,
         tabBarLabelStyle: { fontSize: 11 },
       }}
     >

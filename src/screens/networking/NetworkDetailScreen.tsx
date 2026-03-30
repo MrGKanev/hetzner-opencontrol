@@ -12,7 +12,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { getNetwork } from '../../api/networking';
-import { Colors, Spacing, BorderRadius, Typography } from '../../theme';
+import { Spacing, BorderRadius, Typography } from '../../theme';
+import type { ThemeColors } from '../../theme';
+import { useColors } from '../../store/themeStore';
 import type { Network, Subnet } from '../../models';
 import type { NetworkingStackParamList } from '../../navigation/NetworkingNavigator';
 
@@ -22,6 +24,8 @@ export default function NetworkDetailScreen({ route, navigation }: Props) {
   const { networkId } = route.params;
   const [network, setNetwork] = useState<Network | null>(null);
   const [loading, setLoading] = useState(true);
+  const colors = useColors();
+  const styles = makeStyles(colors);
 
   useEffect(() => {
     getNetwork(networkId)
@@ -33,7 +37,7 @@ export default function NetworkDetailScreen({ route, navigation }: Props) {
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <ActivityIndicator color={Colors.primary} style={{ marginTop: 40 }} />
+        <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
       </SafeAreaView>
     );
   }
@@ -49,15 +53,13 @@ export default function NetworkDetailScreen({ route, navigation }: Props) {
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        {/* Overview */}
-        <Section title="Overview">
-          <InfoRow label="IP Range" value={network.ip_range} mono />
-          <InfoRow label="Servers" value={String(network.servers.length)} />
-          <InfoRow label="Load Balancers" value={String(network.load_balancers.length)} />
-          <InfoRow label="Delete Protection" value={network.protection.delete ? 'Enabled' : 'Disabled'} />
+        <Section title="Overview" colors={colors}>
+          <InfoRow label="IP Range" value={network.ip_range} mono colors={colors} />
+          <InfoRow label="Servers" value={String(network.servers.length)} colors={colors} />
+          <InfoRow label="Load Balancers" value={String(network.load_balancers.length)} colors={colors} />
+          <InfoRow label="Delete Protection" value={network.protection.delete ? 'Enabled' : 'Disabled'} colors={colors} />
         </Section>
 
-        {/* Subnets */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Subnets ({network.subnets.length})</Text>
           {network.subnets.length === 0 ? (
@@ -65,15 +67,14 @@ export default function NetworkDetailScreen({ route, navigation }: Props) {
               <Text style={styles.emptyText}>No subnets configured</Text>
             </View>
           ) : (
-            network.subnets.map((subnet, i) => <SubnetRow key={i} subnet={subnet} />)
+            network.subnets.map((subnet, i) => <SubnetRow key={i} subnet={subnet} colors={colors} />)
           )}
         </View>
 
-        {/* Labels */}
         {Object.keys(network.labels).length > 0 && (
-          <Section title="Labels">
+          <Section title="Labels" colors={colors}>
             {Object.entries(network.labels).map(([k, v]) => (
-              <InfoRow key={k} label={k} value={v} mono />
+              <InfoRow key={k} label={k} value={v} mono colors={colors} />
             ))}
           </Section>
         )}
@@ -82,7 +83,8 @@ export default function NetworkDetailScreen({ route, navigation }: Props) {
   );
 }
 
-function SubnetRow({ subnet }: { subnet: Subnet }) {
+function SubnetRow({ subnet, colors }: { subnet: Subnet; colors: ThemeColors }) {
+  const styles = makeStyles(colors);
   return (
     <View style={styles.subnetCard}>
       <View style={styles.subnetHeader}>
@@ -99,7 +101,8 @@ function SubnetRow({ subnet }: { subnet: Subnet }) {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children, colors }: { title: string; children: React.ReactNode; colors: ThemeColors }) {
+  const styles = makeStyles(colors);
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>{title}</Text>
@@ -108,7 +111,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function InfoRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+function InfoRow({ label, value, mono, colors }: { label: string; value: string; mono?: boolean; colors: ThemeColors }) {
+  const styles = makeStyles(colors);
   return (
     <View style={styles.infoRow}>
       <Text style={styles.infoLabel}>{label}</Text>
@@ -117,8 +121,8 @@ function InfoRow({ label, value, mono }: { label: string; value: string; mono?: 
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+const makeStyles = (c: ThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -126,16 +130,16 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     gap: Spacing.sm,
   },
-  backIcon: { color: Colors.primary, fontSize: 30, fontWeight: '300' },
-  title: { ...Typography.h2, flex: 1 },
+  backIcon: { color: c.primary, fontSize: 30, fontWeight: '300' },
+  title: { ...Typography.h2, color: c.textPrimary, flex: 1 },
   content: { padding: Spacing.lg, gap: Spacing.lg },
   section: { gap: Spacing.sm },
-  sectionTitle: { ...Typography.h3 },
+  sectionTitle: { ...Typography.h3, color: c.textPrimary },
   card: {
-    backgroundColor: Colors.card,
+    backgroundColor: c.card,
     borderRadius: BorderRadius.md,
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
+    borderColor: c.cardBorder,
     overflow: 'hidden',
   },
   infoRow: {
@@ -145,38 +149,38 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm + 2,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.cardBorder,
+    borderBottomColor: c.cardBorder,
   },
-  infoLabel: { ...Typography.bodySmall },
-  infoValue: { ...Typography.body, textAlign: 'right', flex: 1 },
+  infoLabel: { ...Typography.bodySmall, color: c.textSecondary },
+  infoValue: { ...Typography.body, color: c.textPrimary, textAlign: 'right', flex: 1 },
   mono: { fontFamily: 'monospace', fontSize: 13 },
   emptyCard: {
-    backgroundColor: Colors.card,
+    backgroundColor: c.card,
     borderRadius: BorderRadius.md,
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
+    borderColor: c.cardBorder,
     padding: Spacing.md,
     alignItems: 'center',
   },
-  emptyText: { ...Typography.bodySmall },
+  emptyText: { ...Typography.bodySmall, color: c.textSecondary },
   subnetCard: {
-    backgroundColor: Colors.card,
+    backgroundColor: c.card,
     borderRadius: BorderRadius.md,
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
+    borderColor: c.cardBorder,
     padding: Spacing.md,
     gap: Spacing.sm,
     marginBottom: Spacing.sm,
   },
   subnetHeader: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   subnetTypeBadge: {
-    backgroundColor: Colors.primary + '30',
+    backgroundColor: c.primary + '30',
     paddingHorizontal: Spacing.sm,
     paddingVertical: 3,
     borderRadius: BorderRadius.sm,
   },
-  subnetTypeText: { fontSize: 11, fontWeight: '700', color: Colors.primary },
-  subnetRange: { ...Typography.body, fontFamily: 'monospace', fontWeight: '600' },
+  subnetTypeText: { fontSize: 11, fontWeight: '700', color: c.primary },
+  subnetRange: { ...Typography.body, color: c.textPrimary, fontFamily: 'monospace', fontWeight: '600' },
   subnetDetails: { flexDirection: 'row', gap: Spacing.lg },
-  subnetDetail: { ...Typography.bodySmall },
+  subnetDetail: { ...Typography.bodySmall, color: c.textSecondary },
 });

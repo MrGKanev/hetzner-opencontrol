@@ -11,7 +11,10 @@ import {
   ScrollView,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Colors, Spacing, BorderRadius, Typography } from '../../theme';
+import { Spacing, BorderRadius, Typography } from '../../theme';
+import type { ThemeColors } from '../../theme';
+import { useColors } from '../../store/themeStore';
+import { useThemeStore } from '../../store/themeStore';
 
 export interface ActionSheetOption {
   label: string;
@@ -29,10 +32,6 @@ interface ActionSheetProps {
   onCancel: () => void;
 }
 
-// Cross-platform ActionSheet
-// iOS: uses native ActionSheetIOS
-// Android: custom modal bottom sheet
-
 export function showActionSheet(params: {
   title?: string;
   options: ActionSheetOption[];
@@ -40,6 +39,7 @@ export function showActionSheet(params: {
   onSelect: (index: number) => void;
 }) {
   if (Platform.OS === 'ios') {
+    const c = useThemeStore.getState().colors;
     const labels = [...params.options.map(o => o.label), params.cancelLabel ?? 'Cancel'];
     const destructiveIndex = params.options.findIndex(o => o.destructive);
     ActionSheetIOS.showActionSheetWithOptions(
@@ -48,7 +48,7 @@ export function showActionSheet(params: {
         options: labels,
         destructiveButtonIndex: destructiveIndex >= 0 ? destructiveIndex : undefined,
         cancelButtonIndex: labels.length - 1,
-        tintColor: Colors.primary,
+        tintColor: c.primary,
       },
       index => {
         if (index < params.options.length) {
@@ -57,7 +57,6 @@ export function showActionSheet(params: {
       },
     );
   }
-  // Android: caller must render <ActionSheetModal> with visible state
 }
 
 export function ActionSheetModal({
@@ -68,7 +67,10 @@ export function ActionSheetModal({
   onSelect,
   onCancel,
 }: ActionSheetProps) {
-  if (Platform.OS === 'ios') return null; // iOS uses native sheet
+  const colors = useColors();
+  const styles = makeStyles(colors);
+
+  if (Platform.OS === 'ios') return null;
 
   return (
     <Modal
@@ -102,7 +104,7 @@ export function ActionSheetModal({
                 <Icon
                   name={opt.icon}
                   size={20}
-                  color={opt.destructive ? Colors.error : opt.disabled ? Colors.textMuted : Colors.textPrimary}
+                  color={opt.destructive ? colors.error : opt.disabled ? colors.textMuted : colors.textPrimary}
                   style={styles.optionIcon}
                 />
               ) : null}
@@ -127,7 +129,7 @@ export function ActionSheetModal({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: ThemeColors) => StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -137,18 +139,19 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: Colors.surface,
+    backgroundColor: c.surface,
     borderTopLeftRadius: BorderRadius.lg,
     borderTopRightRadius: BorderRadius.lg,
-    paddingBottom: 34, // safe area
+    paddingBottom: 34,
     maxHeight: '70%',
   },
   title: {
     ...Typography.bodySmall,
+    color: c.textSecondary,
     textAlign: 'center',
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.cardBorder,
+    borderBottomColor: c.cardBorder,
   },
   option: {
     flexDirection: 'row',
@@ -158,17 +161,17 @@ const styles = StyleSheet.create({
   },
   optionBorder: {
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.cardBorder,
+    borderBottomColor: c.cardBorder,
   },
   optionDisabled: { opacity: 0.4 },
   optionIcon: { width: 32 },
-  optionLabel: { ...Typography.body, fontWeight: '500' },
-  optionDestructive: { color: Colors.error },
-  optionLabelDisabled: { color: Colors.textMuted },
-  separator: { height: Spacing.sm, backgroundColor: Colors.cardBorder },
+  optionLabel: { ...Typography.body, color: c.textPrimary, fontWeight: '500' },
+  optionDestructive: { color: c.error },
+  optionLabelDisabled: { color: c.textMuted },
+  separator: { height: Spacing.sm, backgroundColor: c.cardBorder },
   cancelBtn: {
     alignItems: 'center',
     paddingVertical: Spacing.md + 2,
   },
-  cancelText: { ...Typography.body, fontWeight: '600', color: Colors.primary },
+  cancelText: { ...Typography.body, color: c.primary, fontWeight: '600' },
 });

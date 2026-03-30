@@ -4,6 +4,7 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
+  Switch,
   StyleSheet,
   Alert,
   Linking,
@@ -15,7 +16,9 @@ import * as Keychain from 'react-native-keychain';
 
 import type { RootStackParamList } from '../../navigation';
 import { useAuthStore } from '../../store/authStore';
-import { Colors, Spacing, BorderRadius, Typography } from '../../theme';
+import { Spacing, BorderRadius, Typography } from '../../theme';
+import type { ThemeColors } from '../../theme';
+import { useColors, useThemeStore } from '../../store/themeStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
 
@@ -24,15 +27,14 @@ const KEYCHAIN_SERVICE = 'HetznerOpenControl';
 
 export default function SettingsScreen({ navigation }: Props) {
   const { logout } = useAuthStore();
+  const { isDark, toggle } = useThemeStore();
+  const colors = useColors();
+  const styles = makeStyles(colors);
   const [maskedToken, setMaskedToken] = useState<string | null>(null);
   const [tokenVisible, setTokenVisible] = useState(false);
 
   const revealToken = async () => {
-    if (tokenVisible) {
-      setTokenVisible(false);
-      setMaskedToken(null);
-      return;
-    }
+    if (tokenVisible) { setTokenVisible(false); setMaskedToken(null); return; }
     try {
       const credentials = await Keychain.getGenericPassword({ service: KEYCHAIN_SERVICE });
       if (credentials && credentials.password) {
@@ -55,11 +57,7 @@ export default function SettingsScreen({ navigation }: Props) {
       'This will remove your saved API token and return you to the login screen.',
       [
         { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: () => logout(),
-        },
+        { text: 'Sign Out', style: 'destructive', onPress: () => logout() },
       ],
     );
   };
@@ -68,7 +66,7 @@ export default function SettingsScreen({ navigation }: Props) {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeBtn}>
-          <Icon name="close" size={22} color={Colors.textSecondary} />
+          <Icon name="close" size={22} color={colors.textSecondary} />
         </TouchableOpacity>
         <Text style={styles.title}>Settings</Text>
         <View style={{ width: 34 }} />
@@ -76,8 +74,25 @@ export default function SettingsScreen({ navigation }: Props) {
 
       <ScrollView contentContainerStyle={styles.content}>
 
+        {/* Appearance */}
+        <Text style={styles.sectionHeader}>Appearance</Text>
+        <View style={styles.card}>
+          <View style={styles.row}>
+            <View style={styles.rowLeft}>
+              <Icon name={isDark ? 'weather-night' : 'weather-sunny'} size={20} color={colors.textSecondary} style={styles.rowIcon} />
+              <Text style={styles.rowLabel}>{isDark ? 'Dark Mode' : 'Light Mode'}</Text>
+            </View>
+            <Switch
+              value={!isDark}
+              onValueChange={toggle}
+              trackColor={{ false: colors.cardBorder, true: colors.primary }}
+              thumbColor={colors.textPrimary}
+            />
+          </View>
+        </View>
+
         {/* Account */}
-        <SectionHeader title="Account" />
+        <Text style={styles.sectionHeader}>Account</Text>
         <View style={styles.card}>
           <SettingsRow
             icon="key-outline"
@@ -85,39 +100,39 @@ export default function SettingsScreen({ navigation }: Props) {
             value={tokenVisible && maskedToken ? maskedToken : '••••••••••••••••••••'}
             onPress={revealToken}
             actionIcon={tokenVisible ? 'eye-off-outline' : 'eye-outline'}
+            colors={colors}
           />
-          <Divider />
+          <View style={styles.divider} />
           <SettingsRow
             icon="logout"
             label="Sign Out"
-            labelColor={Colors.error}
+            labelColor={colors.error}
             onPress={handleLogout}
+            colors={colors}
           />
         </View>
 
         {/* About */}
-        <SectionHeader title="About" />
+        <Text style={styles.sectionHeader}>About</Text>
         <View style={styles.card}>
-          <SettingsRow
-            icon="information-outline"
-            label="Version"
-            value={APP_VERSION}
-          />
-          <Divider />
+          <SettingsRow icon="information-outline" label="Version" value={APP_VERSION} colors={colors} />
+          <View style={styles.divider} />
           <SettingsRow
             icon="github"
             label="Source Code"
             value="GitHub"
-            onPress={() => Linking.openURL('https://github.com/mrgkanev/hetzner-opencontrol')}
+            onPress={() => Linking.openURL('https://github.com/GabrielKanev/Hetzner-OpenControl')}
             actionIcon="open-in-new"
+            colors={colors}
           />
-          <Divider />
+          <View style={styles.divider} />
           <SettingsRow
             icon="shield-check-outline"
             label="Hetzner API"
             value="docs.hetzner.cloud"
             onPress={() => Linking.openURL('https://docs.hetzner.cloud')}
             actionIcon="open-in-new"
+            colors={colors}
           />
         </View>
 
@@ -126,21 +141,8 @@ export default function SettingsScreen({ navigation }: Props) {
   );
 }
 
-function SectionHeader({ title }: { title: string }) {
-  return <Text style={styles.sectionHeader}>{title}</Text>;
-}
-
-function Divider() {
-  return <View style={styles.divider} />;
-}
-
 function SettingsRow({
-  icon,
-  label,
-  labelColor,
-  value,
-  onPress,
-  actionIcon,
+  icon, label, labelColor, value, onPress, actionIcon, colors,
 }: {
   icon: string;
   label: string;
@@ -148,33 +150,30 @@ function SettingsRow({
   value?: string;
   onPress?: () => void;
   actionIcon?: string;
+  colors: ThemeColors;
 }) {
+  const styles = makeStyles(colors);
   const content = (
     <View style={styles.row}>
       <View style={styles.rowLeft}>
-        <Icon name={icon} size={20} color={labelColor ?? Colors.textSecondary} style={styles.rowIcon} />
+        <Icon name={icon} size={20} color={labelColor ?? colors.textSecondary} style={styles.rowIcon} />
         <Text style={[styles.rowLabel, labelColor ? { color: labelColor } : {}]}>{label}</Text>
       </View>
       <View style={styles.rowRight}>
         {value ? <Text style={styles.rowValue} numberOfLines={1}>{value}</Text> : null}
-        {actionIcon ? <Icon name={actionIcon} size={16} color={Colors.textMuted} style={{ marginLeft: 6 }} /> : null}
-        {onPress && !actionIcon ? <Icon name="chevron-right" size={18} color={Colors.textMuted} /> : null}
+        {actionIcon ? <Icon name={actionIcon} size={16} color={colors.textMuted} style={{ marginLeft: 6 }} /> : null}
+        {onPress && !actionIcon ? <Icon name="chevron-right" size={18} color={colors.textMuted} /> : null}
       </View>
     </View>
   );
-
   if (onPress) {
-    return (
-      <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
-        {content}
-      </TouchableOpacity>
-    );
+    return <TouchableOpacity onPress={onPress} activeOpacity={0.7}>{content}</TouchableOpacity>;
   }
   return content;
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+const makeStyles = (c: ThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -186,26 +185,27 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: BorderRadius.full,
-    backgroundColor: Colors.card,
+    backgroundColor: c.card,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  title: { ...Typography.h2 },
+  title: { ...Typography.h2, color: c.textPrimary },
   content: { padding: Spacing.lg, gap: Spacing.sm },
   sectionHeader: {
     ...Typography.label,
+    color: c.textSecondary,
     marginTop: Spacing.md,
     marginBottom: Spacing.xs,
     marginLeft: Spacing.xs,
   },
   card: {
-    backgroundColor: Colors.card,
+    backgroundColor: c.card,
     borderRadius: BorderRadius.md,
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
+    borderColor: c.cardBorder,
     overflow: 'hidden',
   },
-  divider: { height: 1, backgroundColor: Colors.cardBorder },
+  divider: { height: 1, backgroundColor: c.cardBorder },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
   },
   rowLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
   rowIcon: { marginRight: Spacing.sm },
-  rowLabel: { ...Typography.body },
+  rowLabel: { ...Typography.body, color: c.textPrimary },
   rowRight: { flexDirection: 'row', alignItems: 'center', maxWidth: '55%' },
-  rowValue: { ...Typography.bodySmall, color: Colors.textMuted, flexShrink: 1 },
+  rowValue: { ...Typography.bodySmall, color: c.textMuted, flexShrink: 1 },
 });

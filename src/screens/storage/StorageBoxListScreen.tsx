@@ -1,9 +1,14 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors, Spacing, Typography } from '../../theme';
+import { Spacing, Typography } from '../../theme';
+import type { ThemeColors } from '../../theme';
+import { useColors } from '../../store/themeStore';
 
 export default function StorageBoxListScreen() {
+  const colors = useColors();
+  const styles = makeStyles(colors);
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -17,11 +22,11 @@ export default function StorageBoxListScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+const makeStyles = (c: ThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   header: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md },
-  title: { ...Typography.h1 },
+  title: { ...Typography.h1, color: c.textPrimary },
   placeholder: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.lg },
-  placeholderText: { ...Typography.h3, marginBottom: Spacing.sm },
-  placeholderSub: { ...Typography.bodySmall, textAlign: 'center' },
+  placeholderText: { ...Typography.h3, color: c.textPrimary, marginBottom: Spacing.sm },
+  placeholderSub: { ...Typography.bodySmall, color: c.textSecondary, textAlign: 'center' },
 });

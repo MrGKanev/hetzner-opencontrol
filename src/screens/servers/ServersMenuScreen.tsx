@@ -4,7 +4,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { Colors, Spacing, BorderRadius, Typography } from '../../theme';
+import { Spacing, BorderRadius, Typography } from '../../theme';
+import type { ThemeColors } from '../../theme';
+import { useColors } from '../../store/themeStore';
 import type { RootStackParamList } from '../../navigation';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -17,6 +19,8 @@ interface MenuItem {
 
 export default function ServersMenuScreen() {
   const navigation = useNavigation<Nav>();
+  const colors = useColors();
+  const styles = makeStyles(colors);
 
   const items: MenuItem[] = [
     { label: 'All Servers', icon: '🖥', onPress: () => (navigation as any).navigate('ServerList') },
@@ -51,22 +55,22 @@ export default function ServersMenuScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+const makeStyles = (c: ThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   header: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md },
-  title: { ...Typography.h1 },
-  sectionLabel: { ...Typography.label, paddingHorizontal: Spacing.lg, marginTop: Spacing.md, marginBottom: Spacing.sm },
+  title: { ...Typography.h1, color: c.textPrimary },
+  sectionLabel: { ...Typography.label, color: c.textSecondary, paddingHorizontal: Spacing.lg, marginTop: Spacing.md, marginBottom: Spacing.sm },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.card,
+    backgroundColor: c.card,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md + 2,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.cardBorder,
+    borderBottomColor: c.cardBorder,
   },
   rowLast: { borderBottomWidth: 0 },
   rowIcon: { fontSize: 18, width: 32 },
-  rowLabel: { ...Typography.body, flex: 1 },
-  rowChevron: { color: Colors.textMuted, fontSize: 22, fontWeight: '300' },
+  rowLabel: { ...Typography.body, color: c.textPrimary, flex: 1 },
+  rowChevron: { color: c.textMuted, fontSize: 22, fontWeight: '300' },
 });

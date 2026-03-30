@@ -15,7 +15,9 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { getNetworks, deleteNetwork } from '../../api/networking';
-import { Colors, Spacing, BorderRadius, Typography } from '../../theme';
+import { Spacing, BorderRadius, Typography } from '../../theme';
+import type { ThemeColors } from '../../theme';
+import { useColors } from '../../store/themeStore';
 import { ActionSheetModal, showActionSheet } from '../../components/common/ActionSheet';
 import type { Network } from '../../models';
 import type { NetworkingStackParamList } from '../../navigation/NetworkingNavigator';
@@ -34,6 +36,8 @@ export default function NetworkListScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [sheetVisible, setSheetVisible] = useState(false);
   const [selected, setSelected] = useState<Network | null>(null);
+  const colors = useColors();
+  const styles = makeStyles(colors);
 
   const load = async () => {
     try {
@@ -86,12 +90,12 @@ export default function NetworkListScreen() {
       </View>
 
       {loading ? (
-        <ActivityIndicator color={Colors.primary} style={{ marginTop: 40 }} />
+        <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
       ) : (
         <FlatList
           data={networks}
           keyExtractor={n => String(n.id)}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={Colors.primary} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.primary} />}
           contentContainerStyle={styles.list}
           ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
           renderItem={({ item }) => (
@@ -126,23 +130,23 @@ export default function NetworkListScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+const makeStyles = (c: ThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   header: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md },
-  title: { ...Typography.h1 },
+  title: { ...Typography.h1, color: c.textPrimary },
   list: { padding: Spacing.lg },
   row: {
-    backgroundColor: Colors.card,
+    backgroundColor: c.card,
     borderRadius: BorderRadius.md,
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
+    borderColor: c.cardBorder,
     padding: Spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
   },
   rowLeft: { flex: 1 },
-  netName: { ...Typography.h3 },
-  netMeta: { ...Typography.bodySmall, marginTop: 2 },
-  menuDots: { color: Colors.textMuted, fontSize: 16, letterSpacing: 1, padding: Spacing.xs },
-  empty: { ...Typography.bodySmall, textAlign: 'center', marginTop: 40 },
+  netName: { ...Typography.h3, color: c.textPrimary },
+  netMeta: { ...Typography.bodySmall, color: c.textSecondary, marginTop: 2 },
+  menuDots: { color: c.textMuted, fontSize: 16, letterSpacing: 1, padding: Spacing.xs },
+  empty: { ...Typography.bodySmall, color: c.textSecondary, textAlign: 'center', marginTop: 40 },
 });

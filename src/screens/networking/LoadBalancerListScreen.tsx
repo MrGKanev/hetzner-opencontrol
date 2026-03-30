@@ -15,7 +15,9 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { getLoadBalancers, deleteLoadBalancer } from '../../api/networking';
-import { Colors, Spacing, BorderRadius, Typography } from '../../theme';
+import { Spacing, BorderRadius, Typography } from '../../theme';
+import type { ThemeColors } from '../../theme';
+import { useColors } from '../../store/themeStore';
 import { ActionSheetModal, showActionSheet } from '../../components/common/ActionSheet';
 import type { LoadBalancer } from '../../models';
 import type { NetworkingStackParamList } from '../../navigation/NetworkingNavigator';
@@ -34,6 +36,8 @@ export default function LoadBalancerListScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [sheetVisible, setSheetVisible] = useState(false);
   const [selected, setSelected] = useState<LoadBalancer | null>(null);
+  const colors = useColors();
+  const styles = makeStyles(colors);
 
   const load = async () => {
     try {
@@ -86,12 +90,12 @@ export default function LoadBalancerListScreen() {
       </View>
 
       {loading ? (
-        <ActivityIndicator color={Colors.primary} style={{ marginTop: 40 }} />
+        <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
       ) : (
         <FlatList
           data={lbs}
           keyExtractor={lb => String(lb.id)}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={Colors.primary} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.primary} />}
           contentContainerStyle={styles.list}
           ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
           renderItem={({ item }) => (
@@ -103,7 +107,7 @@ export default function LoadBalancerListScreen() {
               <View style={styles.rowLeft}>
                 <View style={styles.rowTop}>
                   <Text style={styles.lbName}>{item.name}</Text>
-                  <AlgorithmBadge type={item.algorithm.type} />
+                  <AlgorithmBadge type={item.algorithm.type} colors={colors} />
                 </View>
                 <Text style={styles.lbMeta}>
                   {item.load_balancer_type.name} · {item.location.city} · {item.services.length} service{item.services.length !== 1 ? 's' : ''}
@@ -132,41 +136,34 @@ export default function LoadBalancerListScreen() {
   );
 }
 
-function AlgorithmBadge({ type }: { type: string }) {
+function AlgorithmBadge({ type, colors }: { type: string; colors: ThemeColors }) {
   const label = type === 'round_robin' ? 'Round Robin' : 'Least Conn';
   return (
-    <View style={styles.algBadge}>
-      <Text style={styles.algText}>{label}</Text>
+    <View style={{ backgroundColor: colors.info + '30', paddingHorizontal: Spacing.sm, paddingVertical: 2, borderRadius: BorderRadius.sm }}>
+      <Text style={{ fontSize: 11, fontWeight: '600', color: colors.info }}>{label}</Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+const makeStyles = (c: ThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   header: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md },
-  title: { ...Typography.h1 },
+  title: { ...Typography.h1, color: c.textPrimary },
   list: { padding: Spacing.lg },
   row: {
-    backgroundColor: Colors.card,
+    backgroundColor: c.card,
     borderRadius: BorderRadius.md,
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
+    borderColor: c.cardBorder,
     padding: Spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
   },
   rowLeft: { flex: 1, gap: 3 },
   rowTop: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  lbName: { ...Typography.h3 },
-  lbMeta: { ...Typography.bodySmall },
-  lbIp: { fontFamily: 'monospace', fontSize: 12, color: Colors.textSecondary },
-  menuDots: { color: Colors.textMuted, fontSize: 16, letterSpacing: 1, padding: Spacing.xs },
-  empty: { ...Typography.bodySmall, textAlign: 'center', marginTop: 40 },
-  algBadge: {
-    backgroundColor: Colors.info + '30',
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-    borderRadius: BorderRadius.sm,
-  },
-  algText: { fontSize: 11, fontWeight: '600', color: Colors.info },
+  lbName: { ...Typography.h3, color: c.textPrimary },
+  lbMeta: { ...Typography.bodySmall, color: c.textSecondary },
+  lbIp: { fontFamily: 'monospace', fontSize: 12, color: c.textSecondary },
+  menuDots: { color: c.textMuted, fontSize: 16, letterSpacing: 1, padding: Spacing.xs },
+  empty: { ...Typography.bodySmall, color: c.textSecondary, textAlign: 'center', marginTop: 40 },
 });

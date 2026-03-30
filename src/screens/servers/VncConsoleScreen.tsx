@@ -13,7 +13,9 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import type { RootStackParamList } from '../../navigation';
 import { requestConsole } from '../../api/servers';
-import { Colors, Spacing, BorderRadius, Typography } from '../../theme';
+import { Spacing, BorderRadius, Typography } from '../../theme';
+import type { ThemeColors } from '../../theme';
+import { useColors } from '../../store/themeStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'VncConsole'>;
 
@@ -22,6 +24,8 @@ export default function VncConsoleScreen({ route, navigation }: Props) {
   const [consoleUrl, setConsoleUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [connected, setConnected] = useState(false);
+  const colors = useColors();
+  const styles = makeStyles(colors);
 
   useEffect(() => {
     loadConsole();
@@ -57,7 +61,7 @@ export default function VncConsoleScreen({ route, navigation }: Props) {
         </View>
         {/* Status bar */}
         <View style={styles.statusBar}>
-          <View style={[styles.statusDot, { backgroundColor: connected ? Colors.success : Colors.warning }]} />
+          <View style={[styles.statusDot, { backgroundColor: connected ? colors.success : colors.warning }]} />
           <Text style={styles.statusText}>{connected ? 'Connected' : 'Connecting...'}</Text>
         </View>
       </SafeAreaView>
@@ -65,7 +69,7 @@ export default function VncConsoleScreen({ route, navigation }: Props) {
       {/* Console */}
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator color={Colors.primary} size="large" />
+          <ActivityIndicator color={colors.primary} size="large" />
           <Text style={styles.loadingText}>Requesting console access...</Text>
         </View>
       ) : consoleUrl ? (
@@ -97,9 +101,9 @@ function buildNoVncUrl(wssUrl: string, password: string): string {
   return `https://novnc.com/noVNC/vnc.html?autoconnect=true&reconnect=true&password=${encodedPass}&path=${encoded}`;
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  headerSafe: { backgroundColor: Colors.surface },
+const makeStyles = (c: ThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
+  headerSafe: { backgroundColor: c.surface },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -107,15 +111,15 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
   },
   closeBtn: {
-    backgroundColor: Colors.primary,
+    backgroundColor: c.primary,
     paddingHorizontal: Spacing.md,
     paddingVertical: 6,
     borderRadius: BorderRadius.md,
   },
-  closeBtnText: { color: Colors.textPrimary, fontWeight: '600' },
-  serverName: { ...Typography.body, flex: 1, textAlign: 'center', fontWeight: '600' },
+  closeBtnText: { color: c.textPrimary, fontWeight: '600' },
+  serverName: { ...Typography.body, color: c.textPrimary, flex: 1, textAlign: 'center', fontWeight: '600' },
   refreshBtn: { padding: Spacing.sm },
-  refreshIcon: { color: Colors.primary, fontSize: 22 },
+  refreshIcon: { color: c.primary, fontSize: 22 },
   statusBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -124,10 +128,10 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   statusDot: { width: 8, height: 8, borderRadius: 4 },
-  statusText: { ...Typography.bodySmall, fontWeight: '500' },
-  webview: { flex: 1, backgroundColor: Colors.background },
+  statusText: { ...Typography.bodySmall, color: c.textSecondary, fontWeight: '500' },
+  webview: { flex: 1, backgroundColor: c.background },
   loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.md },
-  loadingText: { ...Typography.bodySmall },
-  footer: { backgroundColor: Colors.surface },
-  footerText: { ...Typography.caption, textAlign: 'center', paddingVertical: Spacing.sm },
+  loadingText: { ...Typography.bodySmall, color: c.textSecondary },
+  footer: { backgroundColor: c.surface },
+  footerText: { ...Typography.caption, color: c.textMuted, textAlign: 'center', paddingVertical: Spacing.sm },
 });

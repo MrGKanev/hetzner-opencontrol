@@ -13,7 +13,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getVolumes, deleteVolume, detachVolume, attachVolume } from '../../api/volumes';
-import { Colors, Spacing, BorderRadius, Typography } from '../../theme';
+import { Spacing, BorderRadius, Typography } from '../../theme';
+import type { ThemeColors } from '../../theme';
+import { useColors } from '../../store/themeStore';
 import { ActionSheetModal, showActionSheet } from '../../components/common/ActionSheet';
 import type { Volume } from '../../models';
 
@@ -32,6 +34,8 @@ export default function VolumeListScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [sheetVisible, setSheetVisible] = useState(false);
   const [selected, setSelected] = useState<Volume | null>(null);
+  const colors = useColors();
+  const styles = makeStyles(colors);
 
   const load = async () => {
     try {
@@ -108,7 +112,7 @@ export default function VolumeListScreen() {
       </View>
 
       {loading ? (
-        <ActivityIndicator color={Colors.primary} style={{ marginTop: 40 }} />
+        <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
       ) : (
         <FlatList
           data={volumes}
@@ -117,7 +121,7 @@ export default function VolumeListScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={() => { setRefreshing(true); load(); }}
-              tintColor={Colors.primary}
+              tintColor={colors.primary}
             />
           }
           contentContainerStyle={styles.list}
@@ -127,6 +131,7 @@ export default function VolumeListScreen() {
               volume={item}
               onPress={() => openActions(item)}
               onLongPress={() => openActions(item)}
+              colors={colors}
             />
           )}
           ListEmptyComponent={<Text style={styles.empty}>No volumes found</Text>}
@@ -150,11 +155,14 @@ function VolumeRow({
   volume,
   onPress,
   onLongPress,
+  colors,
 }: {
   volume: Volume;
   onPress: () => void;
   onLongPress: () => void;
+  colors: ThemeColors;
 }) {
+  const styles = makeStyles(colors);
   const isAttached = volume.server !== null;
 
   return (
@@ -173,7 +181,7 @@ function VolumeRow({
         </Text>
       </View>
       <View style={[styles.badge, isAttached ? styles.badgeAttached : styles.badgeFree]}>
-        <Text style={[styles.badgeText, { color: isAttached ? Colors.primary : Colors.success }]}>
+        <Text style={[styles.badgeText, { color: isAttached ? colors.primary : colors.success }]}>
           {isAttached ? 'Attached' : 'Available'}
         </Text>
       </View>
@@ -181,30 +189,30 @@ function VolumeRow({
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+const makeStyles = (c: ThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   header: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md },
-  title: { ...Typography.h1 },
+  title: { ...Typography.h1, color: c.textPrimary },
   list: { padding: Spacing.lg },
   row: {
-    backgroundColor: Colors.card,
+    backgroundColor: c.card,
     borderRadius: BorderRadius.md,
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
+    borderColor: c.cardBorder,
     padding: Spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
   },
   rowContent: { flex: 1 },
-  volumeName: { ...Typography.h3 },
-  volumeMeta: { ...Typography.bodySmall, marginTop: 2 },
+  volumeName: { ...Typography.h3, color: c.textPrimary },
+  volumeMeta: { ...Typography.bodySmall, color: c.textSecondary, marginTop: 2 },
   badge: {
     paddingHorizontal: Spacing.sm,
     paddingVertical: 4,
     borderRadius: BorderRadius.full,
   },
-  badgeAttached: { backgroundColor: Colors.primary + '20' },
-  badgeFree: { backgroundColor: Colors.success + '20' },
+  badgeAttached: { backgroundColor: c.primary + '20' },
+  badgeFree: { backgroundColor: c.success + '20' },
   badgeText: { fontSize: 12, fontWeight: '600' },
-  empty: { ...Typography.bodySmall, textAlign: 'center', marginTop: 40 },
+  empty: { ...Typography.bodySmall, color: c.textSecondary, textAlign: 'center', marginTop: 40 },
 });

@@ -13,7 +13,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { createFirewall } from '../../api/networking';
-import { Colors, Spacing, BorderRadius, Typography } from '../../theme';
+import { Spacing, BorderRadius, Typography } from '../../theme';
+import type { ThemeColors } from '../../theme';
+import { useColors } from '../../store/themeStore';
 import type { FirewallRule, FirewallProtocol, FirewallDirection } from '../../models';
 import type { NetworkingStackParamList } from '../../navigation/NetworkingNavigator';
 
@@ -42,20 +44,17 @@ export default function CreateFirewallScreen({ navigation }: Props) {
   const [name, setName] = useState('');
   const [rules, setRules] = useState<DraftRule[]>([{ ...DEFAULT_RULE }]);
   const [creating, setCreating] = useState(false);
+  const colors = useColors();
+  const styles = makeStyles(colors);
 
   const addRule = () => setRules(prev => [...prev, { ...DEFAULT_RULE }]);
-
-  const updateRule = (i: number, patch: Partial<DraftRule>) => {
+  const updateRule = (i: number, patch: Partial<DraftRule>) =>
     setRules(prev => prev.map((r, idx) => idx === i ? { ...r, ...patch } : r));
-  };
-
-  const removeRule = (i: number) => {
+  const removeRule = (i: number) =>
     setRules(prev => prev.filter((_, idx) => idx !== i));
-  };
 
   const handleCreate = async () => {
     if (!name.trim()) { Alert.alert('Error', 'Enter a firewall name'); return; }
-
     const parsedRules: FirewallRule[] = rules.map(r => ({
       direction: r.direction,
       protocol: r.protocol,
@@ -64,7 +63,6 @@ export default function CreateFirewallScreen({ navigation }: Props) {
       destination_ips: r.direction === 'out' ? r.ips.split(',').map(s => s.trim()).filter(Boolean) : [],
       description: r.description || null,
     }));
-
     setCreating(true);
     try {
       await createFirewall(name.trim(), parsedRules);
@@ -85,27 +83,25 @@ export default function CreateFirewallScreen({ navigation }: Props) {
         <Text style={styles.title}>New Firewall</Text>
         <TouchableOpacity onPress={handleCreate} disabled={creating}>
           {creating
-            ? <ActivityIndicator color={Colors.primary} size="small" />
+            ? <ActivityIndicator color={colors.primary} size="small" />
             : <Text style={styles.createText}>Create</Text>
           }
         </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        {/* Name */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>NAME</Text>
           <TextInput
             style={styles.input}
             placeholder="my-firewall"
-            placeholderTextColor={Colors.textMuted}
+            placeholderTextColor={colors.textMuted}
             value={name}
             onChangeText={setName}
             autoCapitalize="none"
           />
         </View>
 
-        {/* Rules */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>RULES</Text>
           {rules.map((rule, i) => (
@@ -119,7 +115,6 @@ export default function CreateFirewallScreen({ navigation }: Props) {
                 )}
               </View>
 
-              {/* Direction */}
               <Text style={styles.fieldLabel}>Direction</Text>
               <View style={styles.segmentRow}>
                 {DIRECTIONS.map(dir => (
@@ -135,7 +130,6 @@ export default function CreateFirewallScreen({ navigation }: Props) {
                 ))}
               </View>
 
-              {/* Protocol */}
               <Text style={styles.fieldLabel}>Protocol</Text>
               <View style={styles.segmentRow}>
                 {PROTOCOLS.map(p => (
@@ -151,14 +145,13 @@ export default function CreateFirewallScreen({ navigation }: Props) {
                 ))}
               </View>
 
-              {/* Port */}
               {(rule.protocol === 'tcp' || rule.protocol === 'udp') && (
                 <>
                   <Text style={styles.fieldLabel}>Port / Range</Text>
                   <TextInput
                     style={styles.inputSmall}
                     placeholder="80  or  443  or  8000-9000"
-                    placeholderTextColor={Colors.textMuted}
+                    placeholderTextColor={colors.textMuted}
                     value={rule.port}
                     onChangeText={v => updateRule(i, { port: v })}
                     keyboardType="numbers-and-punctuation"
@@ -166,26 +159,24 @@ export default function CreateFirewallScreen({ navigation }: Props) {
                 </>
               )}
 
-              {/* IPs */}
               <Text style={styles.fieldLabel}>
                 {rule.direction === 'in' ? 'Source IPs' : 'Destination IPs'}
               </Text>
               <TextInput
                 style={styles.inputSmall}
                 placeholder="0.0.0.0/0, ::/0"
-                placeholderTextColor={Colors.textMuted}
+                placeholderTextColor={colors.textMuted}
                 value={rule.ips}
                 onChangeText={v => updateRule(i, { ips: v })}
                 autoCapitalize="none"
                 keyboardType="ascii-capable"
               />
 
-              {/* Description */}
               <Text style={styles.fieldLabel}>Description (optional)</Text>
               <TextInput
                 style={styles.inputSmall}
                 placeholder="Allow HTTP"
-                placeholderTextColor={Colors.textMuted}
+                placeholderTextColor={colors.textMuted}
                 value={rule.description}
                 onChangeText={v => updateRule(i, { description: v })}
               />
@@ -201,8 +192,8 @@ export default function CreateFirewallScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+const makeStyles = (c: ThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -210,54 +201,54 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.cardBorder,
+    borderBottomColor: c.cardBorder,
   },
-  cancelText: { color: Colors.primary, fontSize: 17 },
-  title: { ...Typography.h3 },
-  createText: { color: Colors.textPrimary, fontSize: 17, fontWeight: '600' },
+  cancelText: { color: c.primary, fontSize: 17 },
+  title: { ...Typography.h3, color: c.textPrimary },
+  createText: { color: c.textPrimary, fontSize: 17, fontWeight: '600' },
   content: { padding: Spacing.lg, gap: Spacing.lg },
   section: { gap: Spacing.sm },
-  sectionLabel: { ...Typography.label },
+  sectionLabel: { ...Typography.label, color: c.textSecondary },
   input: {
-    backgroundColor: Colors.card,
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
+    borderColor: c.cardBorder,
     borderRadius: BorderRadius.md,
-    color: Colors.textPrimary,
+    color: c.textPrimary,
     padding: Spacing.md,
     fontSize: 15,
   },
   ruleCard: {
-    backgroundColor: Colors.card,
+    backgroundColor: c.card,
     borderRadius: BorderRadius.md,
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
+    borderColor: c.cardBorder,
     padding: Spacing.md,
     gap: Spacing.sm,
     marginBottom: Spacing.sm,
   },
   ruleCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  ruleIndex: { ...Typography.body, fontWeight: '600' },
-  removeText: { color: Colors.error, fontSize: 14 },
-  fieldLabel: { ...Typography.caption, color: Colors.textSecondary, marginTop: Spacing.xs },
+  ruleIndex: { ...Typography.body, color: c.textPrimary, fontWeight: '600' },
+  removeText: { color: c.error, fontSize: 14 },
+  fieldLabel: { ...Typography.caption, color: c.textSecondary, marginTop: Spacing.xs },
   segmentRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.xs },
   segment: {
     paddingHorizontal: Spacing.sm,
     paddingVertical: 6,
     borderRadius: BorderRadius.sm,
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    backgroundColor: Colors.surface,
+    borderColor: c.cardBorder,
+    backgroundColor: c.surface,
   },
-  segmentActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  segmentText: { ...Typography.bodySmall, fontWeight: '500' },
-  segmentTextActive: { color: Colors.textPrimary },
+  segmentActive: { backgroundColor: c.primary, borderColor: c.primary },
+  segmentText: { ...Typography.bodySmall, color: c.textSecondary, fontWeight: '500' },
+  segmentTextActive: { color: '#FFFFFF' },
   inputSmall: {
-    backgroundColor: Colors.surface,
+    backgroundColor: c.surface,
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
+    borderColor: c.cardBorder,
     borderRadius: BorderRadius.sm,
-    color: Colors.textPrimary,
+    color: c.textPrimary,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     fontSize: 14,
@@ -265,11 +256,11 @@ const styles = StyleSheet.create({
   },
   addRuleBtn: {
     borderWidth: 1.5,
-    borderColor: Colors.primary,
+    borderColor: c.primary,
     borderStyle: 'dashed',
     borderRadius: BorderRadius.md,
     paddingVertical: Spacing.md,
     alignItems: 'center',
   },
-  addRuleText: { color: Colors.primary, fontWeight: '600', fontSize: 15 },
+  addRuleText: { color: c.primary, fontWeight: '600', fontSize: 15 },
 });

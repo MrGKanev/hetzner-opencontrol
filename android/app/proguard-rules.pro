@@ -8,3 +8,20 @@
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
 # Add any project specific keep options here:
+
+# React Native
+-keep class com.facebook.react.** { *; }
+-keep class com.facebook.hermes.** { *; }
+-keep class com.facebook.jni.** { *; }
+
+# Keychain
+-keep class com.oblador.keychain.** { *; }
+
+# Vector Icons
+-keep class com.oblador.vectoricons.** { *; }
+
+# WebView
+-keep class com.reactnativecommunity.webview.** { *; }
+
+# Biometrics
+-keep class com.rnbiometrics.** { *; }

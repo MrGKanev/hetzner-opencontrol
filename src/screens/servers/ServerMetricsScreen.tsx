@@ -14,7 +14,9 @@ import { LineChart } from 'react-native-gifted-charts';
 
 import type { RootStackParamList } from '../../navigation';
 import { getServerMetrics } from '../../api/servers';
-import { Colors, Spacing, BorderRadius, Typography } from '../../theme';
+import { Spacing, BorderRadius, Typography } from '../../theme';
+import type { ThemeColors } from '../../theme';
+import { useColors } from '../../store/themeStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ServerMetrics'>;
 
@@ -50,6 +52,8 @@ export default function ServerMetricsScreen({ route, navigation }: Props) {
   const [netInData, setNetInData] = useState<{ value: number }[]>([]);
   const [netOutData, setNetOutData] = useState<{ value: number }[]>([]);
   const [loading, setLoading] = useState(true);
+  const colors = useColors();
+  const styles = makeStyles(colors);
 
   useEffect(() => {
     loadMetrics();
@@ -112,21 +116,22 @@ export default function ServerMetricsScreen({ route, navigation }: Props) {
       </ScrollView>
 
       {loading ? (
-        <ActivityIndicator color={Colors.primary} style={{ marginTop: 40 }} />
+        <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
       ) : (
         <ScrollView contentContainerStyle={styles.content}>
-          <MetricChart title="CPU Usage" unit="%" data={cpuData} color={Colors.chartCpu} />
-          <MetricChart title="Disk I/O Read" unit="KB/s" data={diskReadData} color={Colors.chartDisk} />
-          <MetricChart title="Disk I/O Write" unit="KB/s" data={diskWriteData} color={Colors.warning} />
-          <MetricChart title="Network In" unit="KB/s" data={netInData} color={Colors.chartNetwork} />
-          <MetricChart title="Network Out" unit="KB/s" data={netOutData} color={Colors.info} />
+          <MetricChart title="CPU Usage" unit="%" data={cpuData} color={colors.chartCpu} colors={colors} />
+          <MetricChart title="Disk I/O Read" unit="KB/s" data={diskReadData} color={colors.chartDisk} colors={colors} />
+          <MetricChart title="Disk I/O Write" unit="KB/s" data={diskWriteData} color={colors.warning} colors={colors} />
+          <MetricChart title="Network In" unit="KB/s" data={netInData} color={colors.chartNetwork} colors={colors} />
+          <MetricChart title="Network Out" unit="KB/s" data={netOutData} color={colors.info} colors={colors} />
         </ScrollView>
       )}
     </SafeAreaView>
   );
 }
 
-function MetricChart({ title, unit, data, color }: { title: string; unit: string; data: { value: number }[]; color: string }) {
+function MetricChart({ title, unit, data, color, colors }: { title: string; unit: string; data: { value: number }[]; color: string; colors: ThemeColors }) {
+  const styles = makeStyles(colors);
   if (!data.length) return null;
   const latest = data[data.length - 1]?.value ?? 0;
   const display = latest < 10 ? latest.toFixed(2) : latest.toFixed(1);
@@ -148,12 +153,12 @@ function MetricChart({ title, unit, data, color }: { title: string; unit: string
         endFillColor="transparent"
         startOpacity={0.2}
         endOpacity={0}
-        backgroundColor={Colors.card}
+        backgroundColor={colors.card}
         xAxisColor="transparent"
         yAxisColor="transparent"
-        yAxisTextStyle={{ color: Colors.textMuted, fontSize: 10 }}
+        yAxisTextStyle={{ color: colors.textMuted, fontSize: 10 }}
         noOfSections={3}
-        rulesColor={Colors.cardBorder}
+        rulesColor={colors.cardBorder}
         rulesType="solid"
         curved
       />
@@ -161,8 +166,8 @@ function MetricChart({ title, unit, data, color }: { title: string; unit: string
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+const makeStyles = (c: ThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -170,25 +175,25 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     gap: Spacing.sm,
   },
-  backIcon: { color: Colors.primary, fontSize: 30, fontWeight: '300' },
-  title: { ...Typography.h1 },
+  backIcon: { color: c.primary, fontSize: 30, fontWeight: '300' },
+  title: { ...Typography.h1, color: c.textPrimary },
   rangeBar: { paddingHorizontal: Spacing.lg, marginBottom: Spacing.md, flexGrow: 0 },
   rangeBtn: {
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.full,
     marginRight: Spacing.sm,
-    backgroundColor: Colors.card,
+    backgroundColor: c.card,
   },
-  rangeBtnActive: { backgroundColor: Colors.primary },
-  rangeBtnText: { ...Typography.bodySmall, fontWeight: '500' },
-  rangeBtnTextActive: { color: Colors.textPrimary },
+  rangeBtnActive: { backgroundColor: c.primary },
+  rangeBtnText: { ...Typography.bodySmall, color: c.textSecondary, fontWeight: '500' },
+  rangeBtnTextActive: { color: c.textPrimary },
   content: { padding: Spacing.lg, gap: Spacing.lg },
   chart: {
-    backgroundColor: Colors.card,
+    backgroundColor: c.card,
     borderRadius: BorderRadius.md,
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
+    borderColor: c.cardBorder,
     padding: Spacing.md,
     overflow: 'hidden',
   },
@@ -198,7 +203,7 @@ const styles = StyleSheet.create({
     alignItems: 'baseline',
     marginBottom: Spacing.sm,
   },
-  chartTitle: { ...Typography.body, fontWeight: '600' },
-  chartCurrent: { ...Typography.body, fontWeight: '700', color: Colors.textPrimary },
-  chartUnit: { ...Typography.caption, color: Colors.textMuted },
+  chartTitle: { ...Typography.body, color: c.textPrimary, fontWeight: '600' },
+  chartCurrent: { ...Typography.body, fontWeight: '700', color: c.textPrimary },
+  chartUnit: { ...Typography.caption, color: c.textMuted },
 });

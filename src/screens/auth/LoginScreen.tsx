@@ -14,8 +14,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../store/authStore';
-import { Colors, Spacing, BorderRadius, Typography } from '../../theme';
+import { Spacing, BorderRadius, Typography } from '../../theme';
+import type { ThemeColors } from '../../theme';
+import { useColors } from '../../store/themeStore';
 import { Haptics } from '../../services/haptics';
+import HetznerLogo from '../../components/common/HetznerLogo';
 
 const BIOMETRIC_ICON: Record<string, string> = {
   FaceID: '􀎽',   // Face ID glyph — Android fallback below
@@ -35,6 +38,8 @@ const BIOMETRIC_LABEL: Record<string, string> = {
 export default function LoginScreen() {
   const [apiKey, setApiKey] = useState('');
   const [saveKey, setSaveKey] = useState(true);
+  const colors = useColors();
+  const styles = makeStyles(colors);
 
   const { login, unlockWithBiometrics, isLoading, error, clearError, biometricType } = useAuthStore();
 
@@ -77,8 +82,9 @@ export default function LoginScreen() {
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           {/* Logo */}
           <View style={styles.logoContainer}>
-            <Text style={styles.logoText}>HOC</Text>
-            <Text style={styles.logoSub}>Hetzner OpenControl</Text>
+            <HetznerLogo size={72} />
+            <Text style={styles.appName}>OpenControl</Text>
+            <Text style={styles.unofficial}>Unofficial Hetzner Cloud App</Text>
           </View>
 
           <Text style={styles.headline}>Manage your{'\n'}Hetzner Cloud</Text>
@@ -89,7 +95,7 @@ export default function LoginScreen() {
             <TextInput
               style={[styles.input, error ? styles.inputError : null]}
               placeholder="Enter your API key"
-              placeholderTextColor={Colors.textMuted}
+              placeholderTextColor={colors.textMuted}
               value={apiKey}
               onChangeText={text => { setApiKey(text); clearError(); }}
               secureTextEntry
@@ -104,8 +110,8 @@ export default function LoginScreen() {
               <Switch
                 value={saveKey}
                 onValueChange={v => { setSaveKey(v); Haptics.light(); }}
-                trackColor={{ false: Colors.cardBorder, true: Colors.primary }}
-                thumbColor={Colors.textPrimary}
+                trackColor={{ false: colors.cardBorder, true: colors.primary }}
+                thumbColor={colors.textPrimary}
               />
             </View>
 
@@ -116,7 +122,7 @@ export default function LoginScreen() {
               activeOpacity={0.8}
             >
               {isLoading ? (
-                <ActivityIndicator color={Colors.textPrimary} />
+                <ActivityIndicator color={colors.textPrimary} />
               ) : (
                 <Text style={styles.buttonText}>Log In</Text>
               )}
@@ -145,36 +151,36 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: ThemeColors) => StyleSheet.create({
   flex: { flex: 1 },
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1, backgroundColor: c.background },
   scroll: { flexGrow: 1, padding: Spacing.lg },
 
-  logoContainer: { marginTop: Spacing.xl, marginBottom: Spacing.xxl },
-  logoText: { fontSize: 32, fontWeight: '800', color: Colors.primary, letterSpacing: 2 },
-  logoSub: { ...Typography.bodySmall, marginTop: 2 },
+  logoContainer: { marginTop: Spacing.xl, marginBottom: Spacing.xxl, alignItems: 'flex-start', gap: Spacing.sm },
+  appName: { fontSize: 26, fontWeight: '800', color: c.textPrimary, letterSpacing: 0.5 },
+  unofficial: { ...Typography.caption, color: c.textMuted },
 
   headline: {
     fontSize: 34,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: c.textPrimary,
     lineHeight: 42,
     marginBottom: Spacing.xl,
   },
 
   form: { gap: Spacing.md },
-  label: { ...Typography.label },
+  label: { ...Typography.label, color: c.textSecondary },
   input: {
-    backgroundColor: Colors.card,
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
+    borderColor: c.cardBorder,
     borderRadius: BorderRadius.md,
-    color: Colors.textPrimary,
+    color: c.textPrimary,
     padding: Spacing.md,
     fontSize: 15,
   },
-  inputError: { borderColor: Colors.error },
-  errorText: { color: Colors.error, fontSize: 13 },
+  inputError: { borderColor: c.error },
+  errorText: { color: c.error, fontSize: 13 },
 
   saveRow: {
     flexDirection: 'row',
@@ -182,17 +188,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.xs,
   },
-  saveLabel: { ...Typography.body },
+  saveLabel: { ...Typography.body, color: c.textPrimary },
 
   button: {
-    backgroundColor: Colors.primary,
+    backgroundColor: c.primary,
     borderRadius: BorderRadius.md,
     paddingVertical: Spacing.md + 2,
     alignItems: 'center',
     marginTop: Spacing.sm,
   },
   buttonDisabled: { opacity: 0.6 },
-  buttonText: { color: Colors.textPrimary, fontSize: 17, fontWeight: '600' },
+  buttonText: { color: c.textPrimary, fontSize: 17, fontWeight: '600' },
 
   biometricBtn: {
     flexDirection: 'row',
@@ -201,9 +207,9 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     paddingVertical: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
+    borderColor: c.cardBorder,
     borderRadius: BorderRadius.md,
   },
   biometricIcon: { fontSize: 20 },
-  biometricText: { ...Typography.body, fontWeight: '500' },
+  biometricText: { ...Typography.body, color: c.textPrimary, fontWeight: '500' },
 });

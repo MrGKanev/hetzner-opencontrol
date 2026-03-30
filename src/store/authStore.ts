@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { Platform } from 'react-native';
 import * as Keychain from 'react-native-keychain';
 import { createApiClient, destroyApiClient } from '../api/client';
 import { getServers } from '../api/servers';
@@ -32,11 +33,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await getServers();
 
       if (saveToKeychain) {
-        await Keychain.setGenericPassword('apitoken', token, {
-          service: KEYCHAIN_SERVICE,
-          accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_ANY_OR_DEVICE_PASSCODE,
-          accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
-        });
+        // On Android, ACCESS_CONTROL.BIOMETRY_ANY_OR_DEVICE_PASSCODE prompts
+        // the user at save-time too, which can hang silently. Use platform-level
+        // hardware encryption instead; biometric prompt only happens on read.
+        const keychainOptions: Keychain.Options = Platform.OS === 'ios'
+          ? {
+              service: KEYCHAIN_SERVICE,
+              accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_ANY_OR_DEVICE_PASSCODE,
+              accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+            }
+          : {
+              service: KEYCHAIN_SERVICE,
+              storage: Keychain.STORAGE_TYPE.RSA,
+              accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+            };
+        await Keychain.setGenericPassword('apitoken', token, keychainOptions);
       }
 
       set({ isAuthenticated: true, isLoading: false });
@@ -58,10 +69,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ biometricType });
 
     try {
-      // Check if a saved key exists without prompting biometrics yet
+      // On iOS we can check keychain existence without biometric prompt.
+      // On Android we read directly (no ACCESS_CONTROL set on save, so no prompt needed).
       const credentials = await Keychain.getGenericPassword({
         service: KEYCHAIN_SERVICE,
-        authenticationPrompt: { title: 'Unlock Hetzner OpenControl' },
+        ...(Platform.OS === 'ios'
+          ? { authenticationPrompt: { title: 'Unlock Hetzner OpenControl' } }
+          : {}),
       });
       if (credentials && credentials.password) {
         createApiClient(credentials.password);

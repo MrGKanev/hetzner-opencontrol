@@ -16,7 +16,9 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { useServerStore } from '../../store/serverStore';
 import { powerOnServer, powerOffServer, rebootServer, deleteServer } from '../../api/servers';
-import { Colors, Spacing, BorderRadius, Typography } from '../../theme';
+import { Spacing, BorderRadius, Typography } from '../../theme';
+import type { ThemeColors } from '../../theme';
+import { useColors } from '../../store/themeStore';
 import { ActionSheetModal, showActionSheet } from '../../components/common/ActionSheet';
 import { Haptics } from '../../services/haptics';
 import type { RootStackParamList } from '../../navigation';
@@ -43,6 +45,8 @@ export default function ServerListScreen() {
   const { servers, fetchServers, refreshServers, isLoading } = useServerStore();
   const [sheetVisible, setSheetVisible] = useState(false);
   const [selected, setSelected] = useState<Server | null>(null);
+  const colors = useColors();
+  const styles = makeStyles(colors);
 
   useEffect(() => { fetchServers(); }, []);
 
@@ -133,13 +137,13 @@ export default function ServerListScreen() {
       </View>
 
       {isLoading && servers.length === 0 ? (
-        <ActivityIndicator color={Colors.primary} style={{ marginTop: 40 }} />
+        <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
       ) : (
         <FlatList
           data={servers}
           keyExtractor={s => String(s.id)}
           refreshControl={
-            <RefreshControl refreshing={isLoading} onRefresh={refreshServers} tintColor={Colors.primary} />
+            <RefreshControl refreshing={isLoading} onRefresh={refreshServers} tintColor={colors.primary} />
           }
           contentContainerStyle={styles.list}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
@@ -148,6 +152,7 @@ export default function ServerListScreen() {
               server={item}
               onPress={() => navigation.navigate('ServerDetail', { serverId: item.id })}
               onLongPress={() => openActions(item)}
+              colors={colors}
             />
           )}
           ListEmptyComponent={<Text style={styles.empty}>No servers found</Text>}
@@ -171,12 +176,15 @@ function ServerRow({
   server,
   onPress,
   onLongPress,
+  colors,
 }: {
   server: Server;
   onPress: () => void;
   onLongPress: () => void;
+  colors: ThemeColors;
 }) {
-  const statusColor = getStatusColor(server.status);
+  const styles = makeStyles(colors);
+  const statusColor = getStatusColor(server.status, colors);
   return (
     <TouchableOpacity
       style={styles.row}
@@ -201,15 +209,15 @@ function ServerRow({
   );
 }
 
-function getStatusColor(status: ServerStatus): string {
+function getStatusColor(status: ServerStatus, colors: ThemeColors): string {
   switch (status) {
-    case 'running': return Colors.success;
-    case 'off': return Colors.textMuted;
+    case 'running': return colors.success;
+    case 'off': return colors.textMuted;
     case 'starting':
-    case 'stopping': return Colors.warning;
+    case 'stopping': return colors.warning;
     case 'rebuilding':
-    case 'migrating': return Colors.info;
-    default: return Colors.textMuted;
+    case 'migrating': return colors.info;
+    default: return colors.textMuted;
   }
 }
 
@@ -217,8 +225,8 @@ function capitalizeFirst(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+const makeStyles = (c: ThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -226,34 +234,34 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
   },
   backBtn: { marginRight: Spacing.sm },
-  backIcon: { color: Colors.primary, fontSize: 30, fontWeight: '300' },
-  title: { ...Typography.h1, flex: 1 },
+  backIcon: { color: c.primary, fontSize: 30, fontWeight: '300' },
+  title: { ...Typography.h1, color: c.textPrimary, flex: 1 },
   addBtn: {
     width: 32,
     height: 32,
     borderRadius: BorderRadius.full,
     borderWidth: 1.5,
-    borderColor: Colors.primary,
+    borderColor: c.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  addIcon: { color: Colors.primary, fontSize: 18 },
+  addIcon: { color: c.primary, fontSize: 18 },
   list: { padding: Spacing.lg },
   separator: { height: Spacing.sm },
   row: {
-    backgroundColor: Colors.card,
+    backgroundColor: c.card,
     borderRadius: BorderRadius.md,
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
+    borderColor: c.cardBorder,
     padding: Spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
   },
   rowContent: { flex: 1 },
-  serverName: { ...Typography.h3 },
-  serverMeta: { ...Typography.bodySmall, marginTop: 2 },
+  serverName: { ...Typography.h3, color: c.textPrimary },
+  serverMeta: { ...Typography.bodySmall, color: c.textSecondary, marginTop: 2 },
   statusContainer: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   statusDot: { width: 8, height: 8, borderRadius: 4 },
   statusText: { fontSize: 13, fontWeight: '500' },
-  empty: { ...Typography.bodySmall, textAlign: 'center', marginTop: 40 },
+  empty: { ...Typography.bodySmall, color: c.textSecondary, textAlign: 'center', marginTop: 40 },
 });

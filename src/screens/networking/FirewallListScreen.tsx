@@ -15,7 +15,9 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { getFirewalls, deleteFirewall } from '../../api/networking';
-import { Colors, Spacing, BorderRadius, Typography } from '../../theme';
+import { Spacing, BorderRadius, Typography } from '../../theme';
+import type { ThemeColors } from '../../theme';
+import { useColors } from '../../store/themeStore';
 import { ActionSheetModal, showActionSheet } from '../../components/common/ActionSheet';
 import type { Firewall } from '../../models';
 import type { NetworkingStackParamList } from '../../navigation/NetworkingNavigator';
@@ -34,6 +36,8 @@ export default function FirewallListScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [sheetVisible, setSheetVisible] = useState(false);
   const [selectedFirewall, setSelectedFirewall] = useState<Firewall | null>(null);
+  const colors = useColors();
+  const styles = makeStyles(colors);
 
   const load = async () => {
     try {
@@ -51,11 +55,7 @@ export default function FirewallListScreen() {
   const openActions = (fw: Firewall) => {
     setSelectedFirewall(fw);
     if (Platform.OS === 'ios') {
-      showActionSheet({
-        title: fw.name,
-        options: ACTIONS,
-        onSelect: i => handleAction(i, fw),
-      });
+      showActionSheet({ title: fw.name, options: ACTIONS, onSelect: i => handleAction(i, fw) });
     } else {
       setSheetVisible(true);
     }
@@ -70,15 +70,12 @@ export default function FirewallListScreen() {
         Alert.alert('Delete Firewall', `Delete "${fw.name}"? This cannot be undone.`, [
           { text: 'Cancel', style: 'cancel' },
           {
-            text: 'Delete',
-            style: 'destructive',
+            text: 'Delete', style: 'destructive',
             onPress: async () => {
               try {
                 await deleteFirewall(fw.id);
                 setFirewalls(prev => prev.filter(f => f.id !== fw.id));
-              } catch (e: any) {
-                Alert.alert('Error', e.message);
-              }
+              } catch (e: any) { Alert.alert('Error', e.message); }
             },
           },
         ]);
@@ -96,12 +93,12 @@ export default function FirewallListScreen() {
       </View>
 
       {loading ? (
-        <ActivityIndicator color={Colors.primary} style={{ marginTop: 40 }} />
+        <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
       ) : (
         <FlatList
           data={firewalls}
           keyExtractor={f => String(f.id)}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={Colors.primary} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.primary} />}
           contentContainerStyle={styles.list}
           ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
           renderItem={({ item }) => (
@@ -114,8 +111,7 @@ export default function FirewallListScreen() {
               <View style={styles.rowLeft}>
                 <Text style={styles.fwName}>{item.name}</Text>
                 <Text style={styles.fwMeta}>
-                  {item.rules.length} rule{item.rules.length !== 1 ? 's' : ''} ·{' '}
-                  {item.applied_to.length} applied
+                  {item.rules.length} rule{item.rules.length !== 1 ? 's' : ''} · {item.applied_to.length} applied
                 </Text>
               </View>
               <TouchableOpacity onPress={() => openActions(item)} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
@@ -127,7 +123,6 @@ export default function FirewallListScreen() {
         />
       )}
 
-      {/* Android Action Sheet */}
       <ActionSheetModal
         visible={sheetVisible}
         title={selectedFirewall?.name}
@@ -139,8 +134,8 @@ export default function FirewallListScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+const makeStyles = (c: ThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -148,30 +143,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
   },
-  title: { ...Typography.h1 },
+  title: { ...Typography.h1, color: c.textPrimary },
   addBtn: {
     width: 32,
     height: 32,
     borderRadius: BorderRadius.full,
     borderWidth: 1.5,
-    borderColor: Colors.primary,
+    borderColor: c.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  addIcon: { color: Colors.primary, fontSize: 18 },
+  addIcon: { color: c.primary, fontSize: 18 },
   list: { padding: Spacing.lg },
   row: {
-    backgroundColor: Colors.card,
+    backgroundColor: c.card,
     borderRadius: BorderRadius.md,
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
+    borderColor: c.cardBorder,
     padding: Spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
   },
   rowLeft: { flex: 1 },
-  fwName: { ...Typography.h3 },
-  fwMeta: { ...Typography.bodySmall, marginTop: 2 },
-  menuDots: { color: Colors.textMuted, fontSize: 16, letterSpacing: 1, padding: Spacing.xs },
-  empty: { ...Typography.bodySmall, textAlign: 'center', marginTop: 40 },
+  fwName: { ...Typography.h3, color: c.textPrimary },
+  fwMeta: { ...Typography.bodySmall, color: c.textSecondary, marginTop: 2 },
+  menuDots: { color: c.textMuted, fontSize: 16, letterSpacing: 1, padding: Spacing.xs },
+  empty: { ...Typography.bodySmall, color: c.textSecondary, textAlign: 'center', marginTop: 40 },
 });
