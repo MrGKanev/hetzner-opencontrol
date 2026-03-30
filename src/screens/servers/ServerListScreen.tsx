@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,27 +7,109 @@ import {
   StyleSheet,
   RefreshControl,
   ActivityIndicator,
+  Alert,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { useServerStore } from '../../store/serverStore';
+import { powerOnServer, powerOffServer, rebootServer, deleteServer } from '../../api/servers';
 import { Colors, Spacing, BorderRadius, Typography } from '../../theme';
+import { ActionSheetModal, showActionSheet } from '../../components/common/ActionSheet';
 import type { RootStackParamList } from '../../navigation';
 import type { Server, ServerStatus } from '../../models';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
+const runningActions = [
+  { label: 'View Details', icon: '🖥' },
+  { label: 'Open Console', icon: '⌨️' },
+  { label: 'Reboot', icon: '↺' },
+  { label: 'Power Off', icon: '⏻', destructive: true },
+  { label: 'Delete', icon: '🗑', destructive: true },
+];
+
+const offActions = [
+  { label: 'View Details', icon: '🖥' },
+  { label: 'Power On', icon: '▶️' },
+  { label: 'Delete', icon: '🗑', destructive: true },
+];
+
 export default function ServerListScreen() {
   const navigation = useNavigation<Nav>();
   const { servers, fetchServers, refreshServers, isLoading } = useServerStore();
+  const [sheetVisible, setSheetVisible] = useState(false);
+  const [selected, setSelected] = useState<Server | null>(null);
 
   useEffect(() => { fetchServers(); }, []);
 
+  const getActions = (server: Server) =>
+    server.status === 'running' ? runningActions : offActions;
+
+  const openActions = (server: Server) => {
+    setSelected(server);
+    const actions = getActions(server);
+    if (Platform.OS === 'ios') {
+      showActionSheet({
+        title: server.name,
+        options: actions,
+        onSelect: i => handleAction(i, actions, server),
+      });
+    } else {
+      setSheetVisible(true);
+    }
+  };
+
+  const handleAction = async (
+    index: number,
+    actions: typeof runningActions,
+    server: Server,
+  ) => {
+    const label = actions[index].label;
+    switch (label) {
+      case 'View Details':
+        navigation.navigate('ServerDetail', { serverId: server.id });
+        break;
+      case 'Open Console':
+        navigation.navigate('VncConsole', { serverId: server.id, serverName: server.name });
+        break;
+      case 'Reboot':
+        Alert.alert('Reboot', `Reboot "${server.name}"?`, [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Reboot', onPress: () => rebootServer(server.id).then(() => refreshServers()) },
+        ]);
+        break;
+      case 'Power Off':
+        Alert.alert('Power Off', `Power off "${server.name}"?`, [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Power Off', style: 'destructive', onPress: () => powerOffServer(server.id).then(() => refreshServers()) },
+        ]);
+        break;
+      case 'Power On':
+        await powerOnServer(server.id);
+        refreshServers();
+        break;
+      case 'Delete':
+        Alert.alert('Delete Server', `Delete "${server.name}"? This cannot be undone.`, [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete', style: 'destructive',
+            onPress: async () => {
+              try {
+                await deleteServer(server.id);
+                refreshServers();
+              } catch (e: any) { Alert.alert('Error', e.message); }
+            },
+          },
+        ]);
+        break;
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backIcon}>‹</Text>
@@ -53,21 +135,47 @@ export default function ServerListScreen() {
           contentContainerStyle={styles.list}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
           renderItem={({ item }) => (
-            <ServerRow server={item} onPress={() => navigation.navigate('ServerDetail', { serverId: item.id })} />
+            <ServerRow
+              server={item}
+              onPress={() => navigation.navigate('ServerDetail', { serverId: item.id })}
+              onLongPress={() => openActions(item)}
+            />
           )}
-          ListEmptyComponent={
-            <Text style={styles.empty}>No servers found</Text>
-          }
+          ListEmptyComponent={<Text style={styles.empty}>No servers found</Text>}
         />
       )}
+
+      <ActionSheetModal
+        visible={sheetVisible}
+        title={selected?.name}
+        options={selected ? getActions(selected) : []}
+        onSelect={i => {
+          if (selected) handleAction(i, getActions(selected), selected);
+        }}
+        onCancel={() => setSheetVisible(false)}
+      />
     </SafeAreaView>
   );
 }
 
-function ServerRow({ server, onPress }: { server: Server; onPress: () => void }) {
+function ServerRow({
+  server,
+  onPress,
+  onLongPress,
+}: {
+  server: Server;
+  onPress: () => void;
+  onLongPress: () => void;
+}) {
   const statusColor = getStatusColor(server.status);
   return (
-    <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity
+      style={styles.row}
+      onPress={onPress}
+      onLongPress={onLongPress}
+      delayLongPress={400}
+      activeOpacity={0.7}
+    >
       <View style={styles.rowContent}>
         <Text style={styles.serverName}>{server.name}</Text>
         <Text style={styles.serverMeta}>

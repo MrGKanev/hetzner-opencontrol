@@ -9,13 +9,13 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import MapView, { Marker } from 'react-native-maps';
 
 import { useServerStore } from '../../store/serverStore';
 import { getLocations } from '../../api/locations';
 import { getFloatingIPs, getPrimaryIPs, getLoadBalancers, getFirewalls, getNetworks } from '../../api/networking';
 import { getVolumes } from '../../api/volumes';
 import { Colors, Spacing, BorderRadius, Typography } from '../../theme';
+import WorldMap, { type MapMarker } from '../../components/common/WorldMap';
 import type { Location } from '../../models';
 
 interface ResourceCounts {
@@ -30,8 +30,8 @@ interface ResourceCounts {
 
 export default function DashboardScreen() {
   const { servers, fetchServers, refreshServers, isLoading } = useServerStore();
-  const [locations, setLocations] = useState<Location[]>([]);
   const [counts, setCounts] = useState<ResourceCounts | null>(null);
+  const [mapMarkers, setMapMarkers] = useState<MapMarker[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(async () => {
@@ -46,7 +46,16 @@ export default function DashboardScreen() {
         getFirewalls(),
         getNetworks(),
       ]);
-      setLocations(locs);
+
+      const activeLocationNames = new Set(servers.map(s => s.datacenter.location.name));
+
+      setMapMarkers(locs.map(loc => ({
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+        label: `${loc.city} (${loc.name})`,
+        active: activeLocationNames.has(loc.name),
+      })));
+
       setCounts({
         servers: servers.length,
         loadBalancers: lbs.length,
@@ -57,7 +66,7 @@ export default function DashboardScreen() {
         networks: networks.length,
       });
     } catch {}
-  }, [fetchServers, servers.length]);
+  }, [fetchServers, servers]);
 
   useEffect(() => { loadData(); }, []);
 
@@ -68,38 +77,21 @@ export default function DashboardScreen() {
     setRefreshing(false);
   };
 
-  // Get unique locations where we have servers
-  const serverLocations = locations.filter(loc =>
-    servers.some(s => s.datacenter.location.name === loc.name)
-  );
-
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />
+        }
       >
-        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Dashboard</Text>
         </View>
 
         {/* Map */}
-        <MapView
-          style={styles.map}
-          customMapStyle={darkMapStyle}
-          initialRegion={{ latitude: 51, longitude: 10, latitudeDelta: 60, longitudeDelta: 80 }}
-          scrollEnabled={false}
-          zoomEnabled={false}
-          rotateEnabled={false}
-        >
-          {serverLocations.map(loc => (
-            <Marker
-              key={loc.id}
-              coordinate={{ latitude: loc.latitude, longitude: loc.longitude }}
-              pinColor={Colors.primary}
-            />
-          ))}
-        </MapView>
+        <View style={styles.mapContainer}>
+          <WorldMap markers={mapMarkers} height={200} />
+        </View>
 
         {/* Resource Grid */}
         <View style={styles.section}>
@@ -108,13 +100,13 @@ export default function DashboardScreen() {
             <ActivityIndicator color={Colors.primary} style={{ marginTop: Spacing.lg }} />
           ) : (
             <View style={styles.grid}>
-              <ResourceCard icon="🖥" label="Servers" count={counts?.servers ?? 0} />
-              <ResourceCard icon="⚖️" label="Load Balancers" count={counts?.loadBalancers ?? 0} />
-              <ResourceCard icon="🌐" label="Primary IPs" count={counts?.primaryIPs ?? 0} />
-              <ResourceCard icon="📌" label="Floating IPs" count={counts?.floatingIPs ?? 0} />
-              <ResourceCard icon="💾" label="Volumes" count={counts?.volumes ?? 0} />
-              <ResourceCard icon="🔥" label="Firewalls" count={counts?.firewalls ?? 0} />
-              <ResourceCard icon="🔗" label="Networks" count={counts?.networks ?? 0} />
+              <ResourceCard label="Servers" count={counts?.servers ?? 0} />
+              <ResourceCard label="Load Balancers" count={counts?.loadBalancers ?? 0} />
+              <ResourceCard label="Primary IPs" count={counts?.primaryIPs ?? 0} />
+              <ResourceCard label="Floating IPs" count={counts?.floatingIPs ?? 0} />
+              <ResourceCard label="Volumes" count={counts?.volumes ?? 0} />
+              <ResourceCard label="Firewalls" count={counts?.firewalls ?? 0} />
+              <ResourceCard label="Networks" count={counts?.networks ?? 0} />
             </View>
           )}
         </View>
@@ -123,27 +115,29 @@ export default function DashboardScreen() {
   );
 }
 
-function ResourceCard({ icon, label, count }: { icon: string; label: string; count: number }) {
+function ResourceCard({ label, count }: { label: string; count: number }) {
   return (
-    <TouchableOpacity style={styles.resourceCard} activeOpacity={0.7}>
-      <Text style={styles.resourceIcon}>{icon}</Text>
+    <View style={styles.resourceCard}>
       <Text style={styles.resourceCount}>{count}</Text>
       <Text style={styles.resourceLabel}>{label}</Text>
-    </TouchableOpacity>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
   },
   title: { ...Typography.h1 },
-  map: { height: 200, marginHorizontal: Spacing.lg, borderRadius: BorderRadius.lg, overflow: 'hidden' },
+  mapContainer: {
+    marginHorizontal: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+  },
   section: { padding: Spacing.lg },
   sectionLabel: { ...Typography.label, marginBottom: Spacing.md },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
@@ -154,18 +148,9 @@ const styles = StyleSheet.create({
     borderColor: Colors.cardBorder,
     padding: Spacing.md,
     width: '47%',
-    minHeight: 80,
+    minHeight: 72,
     justifyContent: 'center',
   },
-  resourceIcon: { fontSize: 18, marginBottom: 4 },
   resourceCount: { fontSize: 28, fontWeight: '700', color: Colors.textPrimary },
   resourceLabel: { ...Typography.bodySmall, marginTop: 2 },
 });
-
-const darkMapStyle = [
-  { elementType: 'geometry', stylers: [{ color: '#1a1a1a' }] },
-  { elementType: 'labels', stylers: [{ visibility: 'off' }] },
-  { featureType: 'water', stylers: [{ color: '#0d0d0d' }] },
-  { featureType: 'road', stylers: [{ visibility: 'off' }] },
-  { featureType: 'administrative.country', elementType: 'geometry.stroke', stylers: [{ color: '#333333' }] },
-];
