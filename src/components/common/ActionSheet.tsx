@@ -10,6 +10,7 @@ import {
   ActionSheetIOS,
   ScrollView,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Colors, Spacing, BorderRadius, Typography } from '../../theme';
 
 export interface ActionSheetOption {
@@ -97,7 +98,14 @@ export function ActionSheetModal({
               disabled={opt.disabled}
               activeOpacity={0.7}
             >
-              {opt.icon ? <Text style={styles.optionIcon}>{opt.icon}</Text> : null}
+              {opt.icon ? (
+                <Icon
+                  name={opt.icon}
+                  size={20}
+                  color={opt.destructive ? Colors.error : opt.disabled ? Colors.textMuted : Colors.textPrimary}
+                  style={styles.optionIcon}
+                />
+              ) : null}
               <Text style={[
                 styles.optionLabel,
                 opt.destructive && styles.optionDestructive,
@@ -153,7 +161,7 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.cardBorder,
   },
   optionDisabled: { opacity: 0.4 },
-  optionIcon: { fontSize: 18, width: 32 },
+  optionIcon: { width: 32 },
   optionLabel: { ...Typography.body, fontWeight: '500' },
   optionDestructive: { color: Colors.error },
   optionLabelDisabled: { color: Colors.textMuted },

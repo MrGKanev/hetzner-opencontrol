@@ -69,7 +69,7 @@ export default function ServerMetricsScreen({ route, navigation }: Props) {
       ]);
 
       setCpuData(
-        (cpuMetrics.time_series?.cpu?.values ?? []).map(([, v]) => ({ value: parseFloat(v) * 100 }))
+        (cpuMetrics.time_series?.cpu?.values ?? []).map(([, v]) => ({ value: parseFloat(v) }))
       );
       setDiskReadData(
         (diskMetrics.time_series?.['disk.0.bandwidth.read']?.values ?? []).map(([, v]) => ({ value: parseFloat(v) / 1024 }))
@@ -128,10 +128,14 @@ export default function ServerMetricsScreen({ route, navigation }: Props) {
 
 function MetricChart({ title, unit, data, color }: { title: string; unit: string; data: { value: number }[]; color: string }) {
   if (!data.length) return null;
+  const latest = data[data.length - 1]?.value ?? 0;
+  const display = latest < 10 ? latest.toFixed(2) : latest.toFixed(1);
   return (
     <View style={styles.chart}>
-      <Text style={styles.chartTitle}>{title}</Text>
-      <Text style={styles.chartUnit}>{unit}</Text>
+      <View style={styles.chartHeader}>
+        <Text style={styles.chartTitle}>{title}</Text>
+        <Text style={styles.chartCurrent}>{display} <Text style={styles.chartUnit}>{unit}</Text></Text>
+      </View>
       <LineChart
         data={data}
         width={CHART_WIDTH}
@@ -188,6 +192,13 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     overflow: 'hidden',
   },
-  chartTitle: { ...Typography.body, fontWeight: '600', marginBottom: 2 },
-  chartUnit: { ...Typography.caption, marginBottom: Spacing.sm },
+  chartHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+    marginBottom: Spacing.sm,
+  },
+  chartTitle: { ...Typography.body, fontWeight: '600' },
+  chartCurrent: { ...Typography.body, fontWeight: '700', color: Colors.textPrimary },
+  chartUnit: { ...Typography.caption, color: Colors.textMuted },
 });

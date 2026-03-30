@@ -25,17 +25,17 @@ import type { Server, ServerStatus } from '../../models';
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 const runningActions = [
-  { label: 'View Details', icon: '🖥' },
-  { label: 'Open Console', icon: '⌨️' },
-  { label: 'Reboot', icon: '↺' },
-  { label: 'Power Off', icon: '⏻', destructive: true },
-  { label: 'Delete', icon: '🗑', destructive: true },
+  { label: 'View Details', icon: 'monitor' },
+  { label: 'Open Console', icon: 'console' },
+  { label: 'Reboot', icon: 'restart' },
+  { label: 'Power Off', icon: 'power', destructive: true },
+  { label: 'Delete', icon: 'delete-outline', destructive: true },
 ];
 
 const offActions = [
-  { label: 'View Details', icon: '🖥' },
-  { label: 'Power On', icon: '▶️' },
-  { label: 'Delete', icon: '🗑', destructive: true },
+  { label: 'View Details', icon: 'monitor' },
+  { label: 'Power On', icon: 'play-circle-outline' },
+  { label: 'Delete', icon: 'delete-outline', destructive: true },
 ];
 
 export default function ServerListScreen() {

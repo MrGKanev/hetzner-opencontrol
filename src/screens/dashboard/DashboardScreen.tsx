@@ -9,14 +9,20 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useServerStore } from '../../store/serverStore';
 import { getLocations } from '../../api/locations';
 import { getFloatingIPs, getPrimaryIPs, getLoadBalancers, getFirewalls, getNetworks } from '../../api/networking';
 import { getVolumes } from '../../api/volumes';
 import { Colors, Spacing, BorderRadius, Typography } from '../../theme';
-import WorldMap, { type MapMarker } from '../../components/common/WorldMap';
+import GlobeView, { type GlobeMarker as MapMarker } from '../../components/common/GlobeView';
+import type { RootStackParamList } from '../../navigation';
 import type { Location } from '../../models';
+
+type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 interface ResourceCounts {
   servers: number;
@@ -29,6 +35,7 @@ interface ResourceCounts {
 }
 
 export default function DashboardScreen() {
+  const navigation = useNavigation<Nav>();
   const { servers, fetchServers, refreshServers, isLoading } = useServerStore();
   const [counts, setCounts] = useState<ResourceCounts | null>(null);
   const [mapMarkers, setMapMarkers] = useState<MapMarker[]>([]);
@@ -47,7 +54,9 @@ export default function DashboardScreen() {
         getNetworks(),
       ]);
 
-      const activeLocationNames = new Set(servers.map(s => s.datacenter.location.name));
+      // Read fresh servers from store after fetch completes (avoid stale closure)
+      const freshServers = useServerStore.getState().servers;
+      const activeLocationNames = new Set(freshServers.map(s => s.datacenter.location.name));
 
       setMapMarkers(locs.map(loc => ({
         latitude: loc.latitude,
@@ -57,7 +66,7 @@ export default function DashboardScreen() {
       })));
 
       setCounts({
-        servers: servers.length,
+        servers: freshServers.length,
         loadBalancers: lbs.length,
         primaryIPs: primaryIPs.length,
         floatingIPs: floatingIPs.length,
@@ -85,12 +94,26 @@ export default function DashboardScreen() {
         }
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Dashboard</Text>
+          <View style={styles.brandRow}>
+            <View style={styles.brandIcon}>
+              <Icon name="cloud-outline" size={22} color={Colors.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.brandName}>OpenControl</Text>
+              <Text style={styles.brandSub}>Hetzner Cloud</Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Settings')}
+              style={styles.settingsBtn}
+            >
+              <Icon name="cog-outline" size={20} color={Colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Map */}
         <View style={styles.mapContainer}>
-          <WorldMap markers={mapMarkers} height={200} />
+          <GlobeView markers={mapMarkers} height={260} />
         </View>
 
         {/* Resource Grid */}
@@ -130,7 +153,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
   },
-  title: { ...Typography.h1 },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, flex: 1 },
+  settingsBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  brandIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  brandName: { ...Typography.h2, lineHeight: 22 },
+  brandSub: { ...Typography.caption, color: Colors.textMuted, marginTop: 1 },
   mapContainer: {
     marginHorizontal: Spacing.lg,
     borderRadius: BorderRadius.lg,

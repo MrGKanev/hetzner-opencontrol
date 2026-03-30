@@ -2,6 +2,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useAuthStore } from '../store/authStore';
 import { Colors } from '../theme';
@@ -18,10 +19,12 @@ import CreateServerScreen from '../screens/servers/CreateServerScreen';
 import VolumeListScreen from '../screens/volumes/VolumeListScreen';
 import StorageBoxListScreen from '../screens/storage/StorageBoxListScreen';
 import NetworkingNavigator from './NetworkingNavigator';
+import SettingsScreen from '../screens/settings/SettingsScreen';
 
 export type RootStackParamList = {
   Login: undefined;
   Main: undefined;
+  Settings: undefined;
   ServerDetail: { serverId: number };
   ServerMetrics: { serverId: number };
   VncConsole: { serverId: number; serverName: string };
@@ -69,11 +72,46 @@ function MainTabs() {
         tabBarLabelStyle: { fontSize: 11 },
       }}
     >
-      <Tab.Screen name="Dashboard" component={DashboardScreen} options={{ title: 'Dashboard' }} />
-      <Tab.Screen name="Servers" component={ServersNavigator} options={{ title: 'Servers' }} />
-      <Tab.Screen name="Networking" component={NetworkingNavigator} options={{ title: 'Networking' }} />
-      <Tab.Screen name="Volumes" component={VolumeListScreen} options={{ title: 'Volumes' }} />
-      <Tab.Screen name="StorageBoxes" component={StorageBoxListScreen} options={{ title: 'Storage' }} />
+      <Tab.Screen
+        name="Dashboard"
+        component={DashboardScreen}
+        options={{
+          title: 'Overview',
+          tabBarIcon: ({ color, size }) => <Icon name="view-dashboard-outline" color={color} size={size} />,
+        }}
+      />
+      <Tab.Screen
+        name="Servers"
+        component={ServersNavigator}
+        options={{
+          title: 'Servers',
+          tabBarIcon: ({ color, size }) => <Icon name="server-outline" color={color} size={size} />,
+        }}
+      />
+      <Tab.Screen
+        name="Networking"
+        component={NetworkingNavigator}
+        options={{
+          title: 'Networking',
+          tabBarIcon: ({ color, size }) => <Icon name="lan" color={color} size={size} />,
+        }}
+      />
+      <Tab.Screen
+        name="Volumes"
+        component={VolumeListScreen}
+        options={{
+          title: 'Volumes',
+          tabBarIcon: ({ color, size }) => <Icon name="harddisk" color={color} size={size} />,
+        }}
+      />
+      <Tab.Screen
+        name="StorageBoxes"
+        component={StorageBoxListScreen}
+        options={{
+          title: 'Storage',
+          tabBarIcon: ({ color, size }) => <Icon name="database-outline" color={color} size={size} />,
+        }}
+      />
     </Tab.Navigator>
   );
 }
@@ -107,6 +145,11 @@ export default function Navigation() {
             <RootStack.Screen
               name="CreateServer"
               component={CreateServerScreen}
+              options={{ animation: 'slide_from_bottom', presentation: 'modal' }}
+            />
+            <RootStack.Screen
+              name="Settings"
+              component={SettingsScreen}
               options={{ animation: 'slide_from_bottom', presentation: 'modal' }}
             />
           </>
