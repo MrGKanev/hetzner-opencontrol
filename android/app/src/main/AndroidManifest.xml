@@ -40,6 +40,7 @@
 
       <!-- react-native-background-fetch -->
       <service
+        android:name="com.transistorsoft.tsbackgroundfetch.BackgroundFetchJobService"
         android:permission="android.permission.BIND_JOB_SERVICE"
         android:exported="true" />
       <service
