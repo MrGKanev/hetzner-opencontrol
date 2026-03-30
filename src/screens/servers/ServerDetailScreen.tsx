@@ -17,6 +17,7 @@ import { getServer, powerOnServer, powerOffServer, rebootServer, resetServer, sh
 import { useServerStore } from '../../store/serverStore';
 import { Colors, Spacing, BorderRadius, Typography } from '../../theme';
 import { ActionSheetModal, showActionSheet, type ActionSheetOption } from '../../components/common/ActionSheet';
+import { Haptics } from '../../services/haptics';
 import type { Server } from '../../models';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ServerDetail'>;
@@ -48,17 +49,21 @@ export default function ServerDetailScreen({ route, navigation }: Props) {
   useEffect(() => { load(); }, []);
 
   const runAction = async (label: string, fn: () => Promise<any>) => {
+    Haptics.warning();
     Alert.alert(label, `Are you sure you want to ${label.toLowerCase()} this server?`, [
       { text: 'Cancel', style: 'cancel' },
       {
         text: label,
         style: 'destructive',
         onPress: async () => {
+          Haptics.heavy();
           setActionLoading(true);
           try {
             await fn();
+            Haptics.success();
             await load();
           } catch (e: any) {
+            Haptics.error();
             Alert.alert('Error', e.message);
           } finally {
             setActionLoading(false);

@@ -18,6 +18,7 @@ import { useServerStore } from '../../store/serverStore';
 import { powerOnServer, powerOffServer, rebootServer, deleteServer } from '../../api/servers';
 import { Colors, Spacing, BorderRadius, Typography } from '../../theme';
 import { ActionSheetModal, showActionSheet } from '../../components/common/ActionSheet';
+import { Haptics } from '../../services/haptics';
 import type { RootStackParamList } from '../../navigation';
 import type { Server, ServerStatus } from '../../models';
 
@@ -49,6 +50,7 @@ export default function ServerListScreen() {
     server.status === 'running' ? runningActions : offActions;
 
   const openActions = (server: Server) => {
+    Haptics.light();
     setSelected(server);
     const actions = getActions(server);
     if (Platform.OS === 'ios') {
@@ -76,31 +78,38 @@ export default function ServerListScreen() {
         navigation.navigate('VncConsole', { serverId: server.id, serverName: server.name });
         break;
       case 'Reboot':
+        Haptics.warning();
         Alert.alert('Reboot', `Reboot "${server.name}"?`, [
           { text: 'Cancel', style: 'cancel' },
-          { text: 'Reboot', onPress: () => rebootServer(server.id).then(() => refreshServers()) },
+          { text: 'Reboot', onPress: () => { Haptics.medium(); rebootServer(server.id).then(() => { Haptics.success(); refreshServers(); }); } },
         ]);
         break;
       case 'Power Off':
+        Haptics.warning();
         Alert.alert('Power Off', `Power off "${server.name}"?`, [
           { text: 'Cancel', style: 'cancel' },
-          { text: 'Power Off', style: 'destructive', onPress: () => powerOffServer(server.id).then(() => refreshServers()) },
+          { text: 'Power Off', style: 'destructive', onPress: () => { Haptics.heavy(); powerOffServer(server.id).then(() => { Haptics.success(); refreshServers(); }); } },
         ]);
         break;
       case 'Power On':
+        Haptics.medium();
         await powerOnServer(server.id);
+        Haptics.success();
         refreshServers();
         break;
       case 'Delete':
+        Haptics.warning();
         Alert.alert('Delete Server', `Delete "${server.name}"? This cannot be undone.`, [
           { text: 'Cancel', style: 'cancel' },
           {
             text: 'Delete', style: 'destructive',
             onPress: async () => {
+              Haptics.heavy();
               try {
                 await deleteServer(server.id);
+                Haptics.success();
                 refreshServers();
-              } catch (e: any) { Alert.alert('Error', e.message); }
+              } catch (e: any) { Haptics.error(); Alert.alert('Error', e.message); }
             },
           },
         ]);

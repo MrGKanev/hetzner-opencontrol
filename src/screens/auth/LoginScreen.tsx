@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,19 +15,57 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../store/authStore';
 import { Colors, Spacing, BorderRadius, Typography } from '../../theme';
+import { Haptics } from '../../services/haptics';
+
+const BIOMETRIC_ICON: Record<string, string> = {
+  FaceID: '􀎽',   // Face ID glyph — Android fallback below
+  TouchID: '􀟒',
+  Biometrics: '🔒',
+  none: '',
+};
+
+// Android-friendly labels
+const BIOMETRIC_LABEL: Record<string, string> = {
+  FaceID: 'Face ID',
+  TouchID: 'Touch ID',
+  Biometrics: 'Biometrics',
+  none: '',
+};
 
 export default function LoginScreen() {
   const [apiKey, setApiKey] = useState('');
   const [saveKey, setSaveKey] = useState(true);
 
-  const { login, isLoading, error, clearError } = useAuthStore();
+  const { login, unlockWithBiometrics, isLoading, error, clearError, biometricType } = useAuthStore();
+
+  // Auto-prompt biometrics if we have a saved session
+  useEffect(() => {
+    if (biometricType !== 'none') {
+      handleBiometrics();
+    }
+  }, [biometricType]);
 
   const handleLogin = async () => {
     if (!apiKey.trim()) {
+      Haptics.warning();
       Alert.alert('Error', 'Please enter your API key');
       return;
     }
+    Haptics.medium();
     await login(apiKey.trim(), saveKey);
+    if (!useAuthStore.getState().error) {
+      Haptics.success();
+    } else {
+      Haptics.error();
+    }
+  };
+
+  const handleBiometrics = async () => {
+    Haptics.light();
+    await unlockWithBiometrics();
+    if (!useAuthStore.getState().error) {
+      Haptics.success();
+    }
   };
 
   return (
@@ -43,7 +81,6 @@ export default function LoginScreen() {
             <Text style={styles.logoSub}>Hetzner OpenControl</Text>
           </View>
 
-          {/* Headline */}
           <Text style={styles.headline}>Manage your{'\n'}Hetzner Cloud</Text>
 
           {/* Form */}
@@ -66,7 +103,7 @@ export default function LoginScreen() {
               <Text style={styles.saveLabel}>Save API Key securely</Text>
               <Switch
                 value={saveKey}
-                onValueChange={setSaveKey}
+                onValueChange={v => { setSaveKey(v); Haptics.light(); }}
                 trackColor={{ false: Colors.cardBorder, true: Colors.primary }}
                 thumbColor={Colors.textPrimary}
               />
@@ -84,6 +121,23 @@ export default function LoginScreen() {
                 <Text style={styles.buttonText}>Log In</Text>
               )}
             </TouchableOpacity>
+
+            {/* Biometrics button — shown only if a saved key exists */}
+            {biometricType !== 'none' && (
+              <TouchableOpacity
+                style={styles.biometricBtn}
+                onPress={handleBiometrics}
+                disabled={isLoading}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.biometricIcon}>
+                  {Platform.OS === 'ios' ? BIOMETRIC_ICON[biometricType] : '🔒'}
+                </Text>
+                <Text style={styles.biometricText}>
+                  Unlock with {BIOMETRIC_LABEL[biometricType]}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -139,4 +193,17 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: { opacity: 0.6 },
   buttonText: { color: Colors.textPrimary, fontSize: 17, fontWeight: '600' },
+
+  biometricBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+    paddingVertical: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    borderRadius: BorderRadius.md,
+  },
+  biometricIcon: { fontSize: 20 },
+  biometricText: { ...Typography.body, fontWeight: '500' },
 });
