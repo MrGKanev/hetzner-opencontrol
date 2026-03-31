@@ -21,6 +21,7 @@ export default function NetworkingMenuScreen() {
     { label: 'Firewalls', icon: '🔥', screen: 'FirewallList' as const },
     { label: 'Private Networks', icon: '🔗', screen: 'NetworkList' as const },
     { label: 'Floating IPs', icon: '🌐', screen: 'FloatingIpList' as const },
+    { label: 'Primary IPs', icon: '🔌', screen: 'PrimaryIpList' as const },
   ];
 
   return (

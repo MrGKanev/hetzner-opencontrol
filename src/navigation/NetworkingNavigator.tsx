@@ -10,6 +10,7 @@ import LoadBalancerListScreen from '../screens/networking/LoadBalancerListScreen
 import LoadBalancerDetailScreen from '../screens/networking/LoadBalancerDetailScreen';
 import NetworkingMenuScreen from '../screens/networking/NetworkingMenuScreen';
 import FloatingIpListScreen from '../screens/networking/FloatingIpListScreen';
+import PrimaryIpListScreen from '../screens/networking/PrimaryIpListScreen';
 
 export type NetworkingStackParamList = {
   NetworkingMenu: undefined;
@@ -21,6 +22,7 @@ export type NetworkingStackParamList = {
   LoadBalancerList: undefined;
   LoadBalancerDetail: { lbId: number };
   FloatingIpList: undefined;
+  PrimaryIpList: undefined;
 };
 
 const Stack = createNativeStackNavigator<NetworkingStackParamList>();
@@ -37,6 +39,7 @@ export default function NetworkingNavigator() {
       <Stack.Screen name="LoadBalancerList" component={LoadBalancerListScreen} />
       <Stack.Screen name="LoadBalancerDetail" component={LoadBalancerDetailScreen} />
       <Stack.Screen name="FloatingIpList" component={FloatingIpListScreen} />
+      <Stack.Screen name="PrimaryIpList" component={PrimaryIpListScreen} />
     </Stack.Navigator>
   );
 }

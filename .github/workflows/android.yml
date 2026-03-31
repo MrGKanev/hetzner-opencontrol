@@ -52,15 +52,15 @@ jobs:
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleRelease --no-daemon
 
       - name: Locate APK
         id: apk
         run: |
-          APK=$(find android/app/build/outputs/apk/debug -name "*universal*.apk" | head -1)
+          APK=$(find android/app/build/outputs/apk/release -name "*universal*.apk" | head -1)
           echo "path=$APK" >> $GITHUB_OUTPUT
           echo "Found APK: $APK"
-          ls android/app/build/outputs/apk/debug/
+          ls android/app/build/outputs/apk/release/
 
       - name: Delete old artifacts (keep last 3)
         uses: actions/github-script@v7
@@ -69,7 +69,7 @@ jobs:
             const { data: { artifacts } } = await github.rest.actions.listArtifactsForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              name: 'HetznerOpenControl-debug',
+              name: 'HetznerOpenControl-release',
               per_page: 100,
             });
             const sorted = artifacts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -84,7 +84,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: HetznerOpenControl-debug
+          name: HetznerOpenControl-release
           path: ${{ steps.apk.outputs.path }}
           retention-days: 90
           compression-level: 0
@@ -97,7 +97,6 @@ jobs:
             const { version } = JSON.parse(fs.readFileSync('package.json', 'utf8'));
             const apkPath = '${{ steps.apk.outputs.path }}';
 
-            // Delete existing release with same tag if it exists
             try {
               const existing = await github.rest.repos.getReleaseByTag({
                 owner: context.repo.owner,
@@ -116,7 +115,7 @@ jobs:
               repo: context.repo.repo,
               tag_name: version,
               name: `HetznerOpenControl ${version}`,
-              body: `## Android Debug Build\n\nVersion \`${version}\`.\n\n> ⚠️ Debug build — not for production use.`,
+              body: `## Android Release\n\nVersion \`${version}\`.`,
               draft: false,
               prerelease: false,
             });

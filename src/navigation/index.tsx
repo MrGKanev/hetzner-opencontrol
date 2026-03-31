@@ -93,7 +93,7 @@ function MainTabs() {
         component={ServersNavigator}
         options={{
           title: 'Servers',
-          tabBarIcon: ({ color, size }) => <Icon name="server-outline" color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => <Icon name="server" color={color} size={size} />,
         }}
       />
       <Tab.Screen

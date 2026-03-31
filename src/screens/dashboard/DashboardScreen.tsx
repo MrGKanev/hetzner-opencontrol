@@ -177,13 +177,20 @@ export default function DashboardScreen() {
             <ActivityIndicator color={colors.primary} style={{ marginTop: Spacing.lg }} />
           ) : (
             <View style={styles.grid}>
-              <ResourceCard label="Servers" count={counts?.servers ?? 0} colors={colors} />
-              <ResourceCard label="Load Balancers" count={counts?.loadBalancers ?? 0} colors={colors} />
-              <ResourceCard label="Primary IPs" count={counts?.primaryIPs ?? 0} colors={colors} />
-              <ResourceCard label="Floating IPs" count={counts?.floatingIPs ?? 0} colors={colors} />
-              <ResourceCard label="Volumes" count={counts?.volumes ?? 0} colors={colors} />
-              <ResourceCard label="Firewalls" count={counts?.firewalls ?? 0} colors={colors} />
-              <ResourceCard label="Networks" count={counts?.networks ?? 0} colors={colors} />
+              <ResourceCard label="Servers" count={counts?.servers ?? 0} colors={colors}
+                onPress={() => (navigation as any).navigate('Servers', { screen: 'ServerList' })} />
+              <ResourceCard label="Load Balancers" count={counts?.loadBalancers ?? 0} colors={colors}
+                onPress={() => (navigation as any).navigate('Networking', { screen: 'LoadBalancerList' })} />
+              <ResourceCard label="Primary IPs" count={counts?.primaryIPs ?? 0} colors={colors}
+                onPress={() => (navigation as any).navigate('Networking', { screen: 'PrimaryIpList' })} />
+              <ResourceCard label="Floating IPs" count={counts?.floatingIPs ?? 0} colors={colors}
+                onPress={() => (navigation as any).navigate('Networking', { screen: 'FloatingIpList' })} />
+              <ResourceCard label="Volumes" count={counts?.volumes ?? 0} colors={colors}
+                onPress={() => (navigation as any).navigate('Volumes')} />
+              <ResourceCard label="Firewalls" count={counts?.firewalls ?? 0} colors={colors}
+                onPress={() => (navigation as any).navigate('Networking', { screen: 'FirewallList' })} />
+              <ResourceCard label="Networks" count={counts?.networks ?? 0} colors={colors}
+                onPress={() => (navigation as any).navigate('Networking', { screen: 'NetworkList' })} />
             </View>
           )}
         </View>
@@ -192,14 +199,23 @@ export default function DashboardScreen() {
   );
 }
 
-function ResourceCard({ label, count, colors }: { label: string; count: number; colors: ThemeColors }) {
+function ResourceCard({ label, count, colors, onPress }: { label: string; count: number; colors: ThemeColors; onPress?: () => void }) {
   const styles = makeStyles(colors);
-  return (
-    <View style={styles.resourceCard}>
+  const content = (
+    <>
       <Text style={styles.resourceCount}>{count}</Text>
       <Text style={styles.resourceLabel}>{label}</Text>
-    </View>
+      {onPress && <Icon name="chevron-right" size={13} color={colors.textMuted} style={styles.resourceChevron} />}
+    </>
   );
+  if (onPress) {
+    return (
+      <TouchableOpacity style={styles.resourceCard} onPress={onPress} activeOpacity={0.7}>
+        {content}
+      </TouchableOpacity>
+    );
+  }
+  return <View style={styles.resourceCard}>{content}</View>;
 }
 
 const makeStyles = (c: ThemeColors) => StyleSheet.create({
@@ -287,4 +303,5 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   },
   resourceCount: { fontSize: 28, fontWeight: '700', color: c.textPrimary },
   resourceLabel: { ...Typography.bodySmall, color: c.textSecondary, marginTop: 2 },
+  resourceChevron: { position: 'absolute', top: Spacing.sm, right: Spacing.sm },
 });
