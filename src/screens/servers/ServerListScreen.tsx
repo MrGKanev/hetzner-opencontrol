@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -45,8 +46,21 @@ export default function ServerListScreen() {
   const { servers, fetchServers, refreshServers, isLoading } = useServerStore();
   const [sheetVisible, setSheetVisible] = useState(false);
   const [selected, setSelected] = useState<Server | null>(null);
+  const [query, setQuery] = useState('');
   const colors = useColors();
   const styles = makeStyles(colors);
+
+  const filtered = useMemo(() => {
+    if (!query.trim()) return servers;
+    const q = query.toLowerCase();
+    return servers.filter(s =>
+      s.name.toLowerCase().includes(q) ||
+      s.datacenter.location.name.toLowerCase().includes(q) ||
+      s.server_type.name.toLowerCase().includes(q) ||
+      s.public_net.ipv4?.ip.includes(q) ||
+      s.public_net.ipv6?.ip.toLowerCase().includes(q),
+    );
+  }, [servers, query]);
 
   useEffect(() => { fetchServers(); }, []);
 
@@ -136,11 +150,25 @@ export default function ServerListScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* Search */}
+      <View style={styles.searchWrap}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search by name, IP, location..."
+          placeholderTextColor={colors.textMuted}
+          value={query}
+          onChangeText={setQuery}
+          autoCapitalize="none"
+          autoCorrect={false}
+          clearButtonMode="while-editing"
+        />
+      </View>
+
       {isLoading && servers.length === 0 ? (
         <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
       ) : (
         <FlatList
-          data={servers}
+          data={filtered}
           keyExtractor={s => String(s.id)}
           refreshControl={
             <RefreshControl refreshing={isLoading} onRefresh={refreshServers} tintColor={colors.primary} />
@@ -155,7 +183,11 @@ export default function ServerListScreen() {
               colors={colors}
             />
           )}
-          ListEmptyComponent={<Text style={styles.empty}>No servers found</Text>}
+          ListEmptyComponent={
+            <Text style={styles.empty}>
+              {query ? `No servers matching "${query}"` : 'No servers found'}
+            </Text>
+          }
         />
       )}
 
@@ -246,6 +278,20 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     justifyContent: 'center',
   },
   addIcon: { color: c.primary, fontSize: 18 },
+  searchWrap: {
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.sm,
+  },
+  searchInput: {
+    backgroundColor: c.card,
+    borderWidth: 1,
+    borderColor: c.cardBorder,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm + 2,
+    ...Typography.body,
+    color: c.textPrimary,
+  },
   list: { padding: Spacing.lg },
   separator: { height: Spacing.sm },
   row: {

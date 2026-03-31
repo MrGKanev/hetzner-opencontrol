@@ -57,9 +57,10 @@ jobs:
       - name: Locate APK
         id: apk
         run: |
-          APK=$(find android/app/build/outputs/apk/debug -name "*.apk" | head -1)
+          APK=$(find android/app/build/outputs/apk/debug -name "*universal*.apk" | head -1)
           echo "path=$APK" >> $GITHUB_OUTPUT
           echo "Found APK: $APK"
+          ls android/app/build/outputs/apk/debug/
 
       - name: Delete old artifacts (keep last 3)
         uses: actions/github-script@v7
