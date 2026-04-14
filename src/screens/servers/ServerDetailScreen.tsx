@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import type { RootStackParamList } from '../../navigation';
-import { getServer, powerOnServer, powerOffServer, rebootServer, resetServer, shutdownServer } from '../../api/servers';
+import { getServer, powerOnServer, powerOffServer, rebootServer, resetServer, shutdownServer, enableRescueMode, rebuildServer, getImages, attachIso, detachIso, getIsos } from '../../api/servers';
 import { useServerStore } from '../../store/serverStore';
 import { Spacing, BorderRadius, Typography } from '../../theme';
 import type { ThemeColors } from '../../theme';
@@ -95,12 +95,13 @@ export default function ServerDetailScreen({ route, navigation }: Props) {
     opts.push(
       { label: 'Open Console', icon: '🖥' },
       { label: 'Enable Rescue Mode', icon: '🛟' },
-      { label: 'Attach ISO', icon: '💿' },
-      { label: 'Edit Server', icon: '✏️' },
-      { label: 'Change Server Type', icon: '⇅' },
-      { label: 'Protection Settings', icon: '🔒' },
-      { label: 'Reverse DNS', icon: '🔄' },
+      { label: 'Rebuild', icon: '🔨', destructive: true },
     );
+    if (s.iso !== null) {
+      opts.push({ label: 'Detach ISO', icon: '⏏️' });
+    } else {
+      opts.push({ label: 'Attach ISO', icon: '💿' });
+    }
     return opts;
   };
 
@@ -122,7 +123,167 @@ export default function ServerDetailScreen({ route, navigation }: Props) {
       case 'Hard Reset': runAction('Hard Reset', () => resetServer(s.id)); break;
       case 'Power On': runAction('Power On', () => powerOnServer(s.id)); break;
       case 'Open Console': navigation.navigate('VncConsole', { serverId: s.id, serverName: s.name }); break;
+      case 'Enable Rescue Mode': handleRescueMode(s); break;
+      case 'Rebuild': handleRebuild(s); break;
+      case 'Attach ISO': handleAttachIso(s); break;
+      case 'Detach ISO': runAction('Detach ISO', () => detachIso(s.id)); break;
     }
+  };
+
+  const handleRescueMode = (s: Server) => {
+    Haptics.warning();
+    Alert.alert(
+      'Enable Rescue Mode',
+      'Choose rescue system type. The server will boot into rescue mode on next reboot.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'linux64',
+          onPress: () => runRescue(s, 'linux64'),
+        },
+        {
+          text: 'freebsd64',
+          onPress: () => runRescue(s, 'freebsd64'),
+        },
+      ],
+    );
+  };
+
+  const runRescue = async (s: Server, type: 'linux64' | 'freebsd64') => {
+    Haptics.heavy();
+    setActionLoading(true);
+    try {
+      const result = await enableRescueMode(s.id, type);
+      Haptics.success();
+      Alert.alert(
+        'Rescue Mode Enabled',
+        `Type: ${type}\n\nRoot password:\n${result.root_password}\n\nReboot the server to enter rescue mode.`,
+        [{ text: 'OK' }],
+      );
+      await load();
+    } catch (e: any) {
+      Haptics.error();
+      Alert.alert('Error', e.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleAttachIso = async (s: Server) => {
+    setActionLoading(true);
+    let isos: import('../../models').Iso[] = [];
+    try {
+      isos = await getIsos();
+    } catch (e: any) {
+      Alert.alert('Error', e.message);
+      setActionLoading(false);
+      return;
+    } finally {
+      setActionLoading(false);
+    }
+
+    if (isos.length === 0) {
+      Alert.alert('No ISOs available');
+      return;
+    }
+
+    const options = isos.map(iso => ({ label: iso.description, icon: '💿' as string }));
+
+    if (Platform.OS === 'ios') {
+      showActionSheet({
+        title: 'Choose ISO to Attach',
+        options,
+        onSelect: i => runAction('Attach ISO', () => attachIso(s.id, isos[i].id)),
+      });
+    } else {
+      Alert.alert(
+        'Attach ISO',
+        'Choose an ISO to mount:',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          ...isos.slice(0, 5).map(iso => ({
+            text: iso.description,
+            onPress: () => runAction('Attach ISO', () => attachIso(s.id, iso.id)),
+          })),
+        ],
+      );
+    }
+  };
+
+  const handleRebuild = async (s: Server) => {
+    Haptics.warning();
+    setActionLoading(true);
+    let images: import('../../models').Image[] = [];
+    try {
+      images = await getImages('system');
+    } catch (e: any) {
+      Alert.alert('Error', e.message);
+      setActionLoading(false);
+      return;
+    } finally {
+      setActionLoading(false);
+    }
+
+    if (images.length === 0) {
+      Alert.alert('No images available');
+      return;
+    }
+
+    const options = images.map(img => ({
+      label: img.description,
+      icon: '💿' as string,
+    }));
+
+    if (Platform.OS === 'ios') {
+      showActionSheet({
+        title: 'Choose Image to Rebuild',
+        options,
+        onSelect: i => confirmRebuild(s, images[i]),
+      });
+    } else {
+      // On Android use a simple Alert list (first 3 options as workaround)
+      Alert.alert(
+        'Rebuild Server',
+        'This will erase all data on the server. Choose an image:',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          ...images.slice(0, 5).map(img => ({
+            text: img.description,
+            onPress: () => confirmRebuild(s, img),
+          })),
+        ],
+      );
+    }
+  };
+
+  const confirmRebuild = (s: Server, image: import('../../models').Image) => {
+    Alert.alert(
+      'Confirm Rebuild',
+      `Rebuild "${s.name}" with ${image.description}?\n\nAll data will be permanently lost.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Rebuild', style: 'destructive',
+          onPress: async () => {
+            Haptics.heavy();
+            setActionLoading(true);
+            try {
+              const result = await rebuildServer(s.id, image.name ?? image.id);
+              Haptics.success();
+              if (result.root_password) {
+                Alert.alert('Rebuild Started', `Root password:\n${result.root_password}`);
+              }
+              await load();
+            } catch (e: any) {
+              Haptics.error();
+              Alert.alert('Error', e.message);
+            } finally {
+              setActionLoading(false);
+            }
+          },
+        },
+      ],
+    );
   };
 
   if (loading) {
@@ -189,6 +350,14 @@ export default function ServerDetailScreen({ route, navigation }: Props) {
             <InfoRow label="IPv6" value={server.public_net.ipv6.ip} copyable colors={colors} />
           )}
         </Section>
+
+        {/* ISO */}
+        {server.iso && (
+          <Section title="Mounted ISO" colors={colors}>
+            <InfoRow label="Name" value={server.iso.description} colors={colors} />
+            <InfoRow label="Type" value={server.iso.type} colors={colors} />
+          </Section>
+        )}
 
         {/* Location */}
         <Section title="Location" colors={colors}>

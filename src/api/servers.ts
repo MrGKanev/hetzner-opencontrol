@@ -1,5 +1,5 @@
 import { getApiClient } from './client';
-import type { Server, ServerMetrics, Action, Image, Iso, ServerType } from '../models';
+import type { Server, ServerMetrics, Action, Image, Iso, ServerType, PlacementGroup } from '../models';
 
 // ─── List ────────────────────────────────────────────────────────────────────
 
@@ -166,4 +166,15 @@ export async function getImages(type?: string): Promise<Image[]> {
 export async function getIsos(): Promise<Iso[]> {
   const res = await getApiClient().get('/isos', { params: { per_page: 100, type: 'public' } });
   return res.data.isos;
+}
+
+// ─── Placement Groups ─────────────────────────────────────────────────────────
+
+export async function getPlacementGroups(): Promise<PlacementGroup[]> {
+  const res = await getApiClient().get('/placement_groups', { params: { per_page: 100 } });
+  return res.data.placement_groups;
+}
+
+export async function deletePlacementGroup(id: number): Promise<void> {
+  await getApiClient().delete(`/placement_groups/${id}`);
 }

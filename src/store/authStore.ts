@@ -33,13 +33,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await getServers();
 
       if (saveToKeychain) {
-        // On Android, ACCESS_CONTROL.BIOMETRY_ANY_OR_DEVICE_PASSCODE prompts
-        // the user at save-time too, which can hang silently. Use platform-level
-        // hardware encryption instead; biometric prompt only happens on read.
+        // Do NOT use ACCESS_CONTROL at save-time — on both iOS and Android it can
+        // trigger a biometric/passcode prompt while the spinner is showing, causing
+        // the app to hang silently. Biometric gate is enforced manually in
+        // unlockWithBiometrics before we ever read the key back.
         const keychainOptions: Keychain.Options = Platform.OS === 'ios'
           ? {
               service: KEYCHAIN_SERVICE,
-              accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_ANY_OR_DEVICE_PASSCODE,
               accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
             }
           : {
@@ -60,6 +60,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   logout: async () => {
     await Keychain.resetGenericPassword({ service: KEYCHAIN_SERVICE });
     destroyApiClient();
+    // Also clear multi-project state if any
+    const { useProjectsStore } = require('./projectsStore');
+    useProjectsStore.getState().clearActiveProject();
     set({ isAuthenticated: false, error: null });
   },
 
@@ -83,7 +86,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return true;
       }
     } catch {
-      // Keychain access denied or no credentials — show login screen
+      // Keychain access denied or no credentials - show login screen
       destroyApiClient();
     }
     return false;

@@ -224,7 +224,7 @@ export interface LoadBalancerTarget {
 
 // ─── Snapshot / Backup ──────────────────────────────────────────────────────
 
-// Images with type 'snapshot' or 'backup' — reuses Image model
+// Images with type 'snapshot' or 'backup' - reuses Image model
 
 // ─── Placement Group ────────────────────────────────────────────────────────
 

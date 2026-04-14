@@ -8,21 +8,36 @@ import {
   RefreshControl,
   ActivityIndicator,
   Alert,
+  Platform,
   Clipboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import { getPrimaryIPs } from '../../api/networking';
+import { getPrimaryIPs, deletePrimaryIP, unassignPrimaryIP } from '../../api/networking';
 import type { PrimaryIP } from '../../models';
 import { Spacing, BorderRadius, Typography } from '../../theme';
 import type { ThemeColors } from '../../theme';
 import { useColors } from '../../store/themeStore';
+import { ActionSheetModal, showActionSheet } from '../../components/common/ActionSheet';
+
+const assignedActions = [
+  { label: 'Copy IP', icon: '📋' },
+  { label: 'Unassign', icon: '⏏️' },
+  { label: 'Delete', icon: '🗑', destructive: true },
+];
+
+const freeActions = [
+  { label: 'Copy IP', icon: '📋' },
+  { label: 'Delete', icon: '🗑', destructive: true },
+];
 
 export default function PrimaryIpListScreen() {
   const [ips, setIps] = useState<PrimaryIP[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [selected, setSelected] = useState<PrimaryIP | null>(null);
+  const [sheetVisible, setSheetVisible] = useState(false);
   const colors = useColors();
   const styles = makeStyles(colors);
 
@@ -41,9 +56,59 @@ export default function PrimaryIpListScreen() {
 
   useEffect(() => { load(); }, [load]);
 
-  const copyIp = (ip: string) => {
-    Clipboard.setString(ip);
-    Alert.alert('Copied', `${ip} copied to clipboard`);
+  const getActions = (ip: PrimaryIP) => ip.assignee_id !== null ? assignedActions : freeActions;
+
+  const openActions = (ip: PrimaryIP) => {
+    setSelected(ip);
+    if (Platform.OS === 'ios') {
+      showActionSheet({
+        title: ip.name || ip.ip,
+        options: getActions(ip),
+        onSelect: i => handleAction(i, getActions(ip), ip),
+      });
+    } else {
+      setSheetVisible(true);
+    }
+  };
+
+  const handleAction = async (index: number, actions: typeof assignedActions, ip: PrimaryIP) => {
+    const label = actions[index].label;
+    switch (label) {
+      case 'Copy IP':
+        Clipboard.setString(ip.ip);
+        Alert.alert('Copied', `${ip.ip} copied to clipboard`);
+        break;
+
+      case 'Unassign':
+        Alert.alert('Unassign IP', `Unassign ${ip.ip} from server?`, [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Unassign',
+            onPress: async () => {
+              try {
+                await unassignPrimaryIP(ip.id);
+                setIps(prev => prev.map(i => i.id === ip.id ? { ...i, assignee_id: null } : i));
+              } catch (e: any) { Alert.alert('Error', e.message); }
+            },
+          },
+        ]);
+        break;
+
+      case 'Delete':
+        Alert.alert('Delete Primary IP', `Delete ${ip.ip}? This cannot be undone.`, [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete', style: 'destructive',
+            onPress: async () => {
+              try {
+                await deletePrimaryIP(ip.id);
+                setIps(prev => prev.filter(i => i.id !== ip.id));
+              } catch (e: any) { Alert.alert('Error', e.message); }
+            },
+          },
+        ]);
+        break;
+    }
   };
 
   const renderItem = ({ item }: { item: PrimaryIP }) => {
@@ -51,7 +116,7 @@ export default function PrimaryIpListScreen() {
     return (
       <TouchableOpacity
         style={styles.card}
-        onPress={() => copyIp(item.ip)}
+        onPress={() => openActions(item)}
         activeOpacity={0.75}
       >
         <View style={styles.cardLeft}>
@@ -67,13 +132,10 @@ export default function PrimaryIpListScreen() {
             </Text>
           </View>
         </View>
-        <View style={styles.right}>
-          <View style={[styles.badge, isAssigned ? styles.badgeAssigned : styles.badgeFree]}>
-            <Text style={[styles.badgeText, { color: isAssigned ? colors.primary : colors.textMuted }]}>
-              {isAssigned ? 'In use' : 'Free'}
-            </Text>
-          </View>
-          <Icon name="content-copy" size={14} color={colors.textMuted} style={{ marginTop: 6 }} />
+        <View style={[styles.badge, isAssigned ? styles.badgeAssigned : styles.badgeFree]}>
+          <Text style={[styles.badgeText, { color: isAssigned ? colors.primary : colors.textMuted }]}>
+            {isAssigned ? 'In use' : 'Free'}
+          </Text>
         </View>
       </TouchableOpacity>
     );
@@ -107,6 +169,14 @@ export default function PrimaryIpListScreen() {
           }
         />
       )}
+
+      <ActionSheetModal
+        visible={sheetVisible}
+        title={selected ? (selected.name || selected.ip) : undefined}
+        options={selected ? getActions(selected) : []}
+        onSelect={i => { if (selected) handleAction(i, getActions(selected), selected); }}
+        onCancel={() => setSheetVisible(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -141,11 +211,11 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   name: { ...Typography.body, color: c.textPrimary, fontWeight: '600' },
   ip: { ...Typography.body, color: c.textPrimary, fontFamily: 'monospace', fontWeight: '500' },
   meta: { ...Typography.caption, color: c.textMuted, marginTop: 2 },
-  right: { alignItems: 'center', marginLeft: Spacing.sm },
   badge: {
     paddingHorizontal: Spacing.sm,
     paddingVertical: 3,
     borderRadius: BorderRadius.full,
+    marginLeft: Spacing.sm,
   },
   badgeAssigned: { backgroundColor: c.primary + '22' },
   badgeFree: { backgroundColor: c.surface },

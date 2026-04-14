@@ -57,7 +57,7 @@ export const BorderRadius = {
   full: 999,
 } as const;
 
-// Typography without colors — components add their own color via ThemeColors
+// Typography without colors - components add their own color via ThemeColors
 export const Typography = {
   h1: { fontSize: 28, fontWeight: '700' as const },
   h2: { fontSize: 22, fontWeight: '700' as const },

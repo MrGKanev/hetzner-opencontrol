@@ -5,16 +5,22 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import Navigation from './src/navigation';
 import { useAuthStore } from './src/store/authStore';
+import { useProjectsStore } from './src/store/projectsStore';
 import { Colors } from './src/theme';
+import { useServerPoller } from './src/services/serverPoller';
 
 export default function App() {
   const { tryRestoreSession, isAuthenticated } = useAuthStore();
+  useServerPoller();
 
   useEffect(() => {
     if (!isAuthenticated) {
-      tryRestoreSession().then(restored => {
+      tryRestoreSession().then(async (restored) => {
         if (restored) {
           useAuthStore.setState({ isAuthenticated: true });
+        } else {
+          // Try to restore from saved projects (multi-project mode)
+          await useProjectsStore.getState().tryRestoreActiveProject();
         }
       });
     }

@@ -22,6 +22,7 @@ export default function NetworkingMenuScreen() {
     { label: 'Private Networks', icon: '🔗', screen: 'NetworkList' as const },
     { label: 'Floating IPs', icon: '🌐', screen: 'FloatingIpList' as const },
     { label: 'Primary IPs', icon: '🔌', screen: 'PrimaryIpList' as const },
+    { label: 'Certificates', icon: '🔒', screen: 'CertificateList' as const },
   ];
 
   return (

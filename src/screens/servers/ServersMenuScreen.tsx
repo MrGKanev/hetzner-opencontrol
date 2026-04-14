@@ -27,7 +27,7 @@ export default function ServersMenuScreen() {
     { label: 'SSH Keys', icon: '🔑', onPress: () => navigation.navigate('SshKeyList') },
     { label: 'Snapshots & Backups', icon: '📷', onPress: () => navigation.navigate('Images') },
     { label: 'Activities', icon: '⚡️', onPress: () => {} },
-    { label: 'Placement Groups', icon: '⊞', onPress: () => {} },
+    { label: 'Placement Groups', icon: '⊞', onPress: () => navigation.navigate('PlacementGroupList') },
     { label: 'Primary IPs', icon: '🌐', onPress: () => {} },
   ];
 

@@ -1,5 +1,5 @@
 import { getApiClient } from './client';
-import type { Firewall, FirewallRule, Network, FloatingIP, PrimaryIP, LoadBalancer, Action } from '../models';
+import type { Firewall, FirewallRule, Network, FloatingIP, PrimaryIP, LoadBalancer, Certificate, Action } from '../models';
 
 // ─── Firewalls ────────────────────────────────────────────────────────────────
 
@@ -76,6 +76,15 @@ export async function getPrimaryIPs(): Promise<PrimaryIP[]> {
   return res.data.primary_ips;
 }
 
+export async function deletePrimaryIP(id: number): Promise<void> {
+  await getApiClient().delete(`/primary_ips/${id}`);
+}
+
+export async function unassignPrimaryIP(id: number): Promise<Action> {
+  const res = await getApiClient().post(`/primary_ips/${id}/actions/unassign`);
+  return res.data.action;
+}
+
 // ─── Load Balancers ───────────────────────────────────────────────────────────
 
 export async function getLoadBalancers(): Promise<LoadBalancer[]> {
@@ -90,4 +99,15 @@ export async function getLoadBalancer(id: number): Promise<LoadBalancer> {
 
 export async function deleteLoadBalancer(id: number): Promise<void> {
   await getApiClient().delete(`/load_balancers/${id}`);
+}
+
+// ─── Certificates ─────────────────────────────────────────────────────────────
+
+export async function getCertificates(): Promise<Certificate[]> {
+  const res = await getApiClient().get('/certificates', { params: { per_page: 100 } });
+  return res.data.certificates;
+}
+
+export async function deleteCertificate(id: number): Promise<void> {
+  await getApiClient().delete(`/certificates/${id}`);
 }

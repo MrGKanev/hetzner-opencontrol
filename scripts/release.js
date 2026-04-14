@@ -32,7 +32,7 @@ if (/^\d+\.\d+\.\d+$/.test(bump)) {
 pkg.version = newVersion;
 fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
 
-console.log(`${pkg.version.replace(newVersion, '')}${newVersion} — bumped from ${major}.${minor}.${patch}`);
+console.log(`${pkg.version.replace(newVersion, '')}${newVersion} - bumped from ${major}.${minor}.${patch}`);
 
 const run = cmd => execSync(cmd, { stdio: 'inherit' });
 
@@ -40,4 +40,4 @@ run(`git add package.json`);
 run(`git commit -m "Release ${newVersion}"`);
 run(`git push`);
 
-console.log(`\n✓ Pushed v${newVersion} — CI build started`);
+console.log(`\n✓ Pushed v${newVersion} - CI build started`);

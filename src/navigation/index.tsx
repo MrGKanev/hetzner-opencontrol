@@ -18,8 +18,9 @@ import VncConsoleScreen from '../screens/servers/VncConsoleScreen';
 import CreateServerScreen from '../screens/servers/CreateServerScreen';
 import SshKeyListScreen from '../screens/servers/SshKeyListScreen';
 import ImagesScreen from '../screens/servers/ImagesScreen';
+import PlacementGroupListScreen from '../screens/servers/PlacementGroupListScreen';
 import VolumeListScreen from '../screens/volumes/VolumeListScreen';
-// TODO: Storage Boxes require Hetzner Robot API (separate credentials) — implement later
+// TODO: Storage Boxes require Hetzner Robot API (separate credentials) - implement later
 // import StorageBoxListScreen from '../screens/storage/StorageBoxListScreen';
 import NetworkingNavigator from './NetworkingNavigator';
 import SettingsScreen from '../screens/settings/SettingsScreen';
@@ -47,6 +48,7 @@ export type ServersStackParamList = {
   ServerList: undefined;
   SshKeyList: undefined;
   Images: undefined;
+  PlacementGroupList: undefined;
 };
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
@@ -60,6 +62,7 @@ function ServersNavigator() {
       <ServersStack.Screen name="ServerList" component={ServerListScreen} />
       <ServersStack.Screen name="SshKeyList" component={SshKeyListScreen} />
       <ServersStack.Screen name="Images" component={ImagesScreen} />
+      <ServersStack.Screen name="PlacementGroupList" component={PlacementGroupListScreen} />
     </ServersStack.Navigator>
   );
 }
@@ -112,7 +115,7 @@ function MainTabs() {
           tabBarIcon: ({ color, size }) => <Icon name="harddisk" color={color} size={size} />,
         }}
       />
-      {/* TODO: StorageBoxes tab — needs Robot API integration */}
+      {/* TODO: StorageBoxes tab - needs Robot API integration */}
     </Tab.Navigator>
   );
 }
