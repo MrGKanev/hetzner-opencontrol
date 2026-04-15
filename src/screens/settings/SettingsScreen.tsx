@@ -260,7 +260,6 @@ export default function SettingsScreen({ navigation }: Props) {
                       </View>
                     </View>
                   )}
-                </React.Fragment>
             </React.Fragment>
           ))}
           {projects.length > 0 && <View style={styles.divider} />}
