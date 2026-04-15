@@ -200,8 +200,8 @@ export default function SettingsScreen({ navigation }: Props) {
         <View style={styles.card}>
           {projects.map((project, index) => (
             <React.Fragment key={project.id}>
-              {index > 0 && <View style={styles.divider} />
-                  {renamingId === project.id ? (
+              {index > 0 && <View style={styles.divider} />}
+              {renamingId === project.id ? (
                     <View style={styles.renameRow}>
                       <TextInput
                         style={styles.renameInput}
