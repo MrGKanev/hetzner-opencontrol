@@ -7,9 +7,10 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Spacing, BorderRadius, Typography } from '../../theme';
 import type { ThemeColors } from '../../theme';
 import { useColors } from '../../store/themeStore';
-import type { ServersStackParamList } from '../../navigation';
+import type { ServersStackParamList, RootStackParamList } from '../../navigation';
 
-type Nav = NativeStackNavigationProp<ServersStackParamList>;
+type ServersNav = NativeStackNavigationProp<ServersStackParamList>;
+type RootNav = NativeStackNavigationProp<RootStackParamList>;
 
 interface MenuItem {
   label: string;
@@ -18,7 +19,8 @@ interface MenuItem {
 }
 
 export default function ServersMenuScreen() {
-  const navigation = useNavigation<Nav>();
+  const navigation = useNavigation<ServersNav>();
+  const rootNavigation = useNavigation<RootNav>();
   const colors = useColors();
   const styles = makeStyles(colors);
 
@@ -28,7 +30,8 @@ export default function ServersMenuScreen() {
     { label: 'Snapshots & Backups', icon: '📷', onPress: () => navigation.navigate('Images') },
     { label: 'Activities', icon: '⚡️', onPress: () => {} },
     { label: 'Placement Groups', icon: '⊞', onPress: () => navigation.navigate('PlacementGroupList') },
-    { label: 'Primary IPs', icon: '🌐', onPress: () => {} },
+    { label: 'Primary IPs', icon: '🌐', onPress: () => rootNavigation.navigate('PrimaryIpList') },
+    { label: 'Pricing Calculator', icon: '💰', onPress: () => rootNavigation.navigate('PricingCalculator') },
   ];
 
   return (

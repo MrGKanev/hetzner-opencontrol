@@ -25,6 +25,7 @@ import { useSettingsStore, REFRESH_INTERVALS } from '../../store/settingsStore';
 import { useProjectsStore } from '../../store/projectsStore';
 import { requestNotificationPermission } from '../../services/notifications';
 import { Haptics } from '../../services/haptics';
+import { authenticateWithBiometrics, getBiometricType } from '../../services/biometrics';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
 
@@ -70,6 +71,15 @@ export default function SettingsScreen({ navigation }: Props) {
   const revealToken = async () => {
     if (tokenVisible) { setTokenVisible(false); setMaskedToken(null); return; }
     try {
+      const biometricType = await getBiometricType();
+      if (biometricType !== 'none') {
+        const ok = await authenticateWithBiometrics('Authenticate to view API token');
+        if (!ok) {
+          Haptics.error();
+          Alert.alert('Authentication required', 'Biometric authentication failed.');
+          return;
+        }
+      }
       const credentials = await Keychain.getGenericPassword({ service: KEYCHAIN_SERVICE });
       if (credentials && credentials.password) {
         const t = credentials.password;

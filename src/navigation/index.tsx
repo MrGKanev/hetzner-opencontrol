@@ -24,6 +24,9 @@ import VolumeListScreen from '../screens/volumes/VolumeListScreen';
 // import StorageBoxListScreen from '../screens/storage/StorageBoxListScreen';
 import NetworkingNavigator from './NetworkingNavigator';
 import SettingsScreen from '../screens/settings/SettingsScreen';
+import PrimaryIpListScreen from '../screens/networking/PrimaryIpListScreen';
+import SearchScreen from '../screens/search/SearchScreen';
+import PricingCalculatorScreen from '../screens/pricing/PricingCalculatorScreen';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -33,6 +36,8 @@ export type RootStackParamList = {
   ServerMetrics: { serverId: number };
   VncConsole: { serverId: number; serverName: string };
   CreateServer: undefined;
+  PrimaryIpList: undefined;
+  PricingCalculator: undefined;
 };
 
 export type MainTabParamList = {
@@ -40,6 +45,7 @@ export type MainTabParamList = {
   Servers: undefined;
   Networking: undefined;
   Volumes: undefined;
+  Search: undefined;
   // StorageBoxes: undefined; // TODO: Robot API
 };
 
@@ -115,6 +121,14 @@ function MainTabs() {
           tabBarIcon: ({ color, size }) => <Icon name="harddisk" color={color} size={size} />,
         }}
       />
+      <Tab.Screen
+        name="Search"
+        component={SearchScreen}
+        options={{
+          title: 'Search',
+          tabBarIcon: ({ color, size }) => <Icon name="magnify" color={color} size={size} />,
+        }}
+      />
       {/* TODO: StorageBoxes tab - needs Robot API integration */}
     </Tab.Navigator>
   );
@@ -155,6 +169,16 @@ export default function Navigation() {
               name="Settings"
               component={SettingsScreen}
               options={{ animation: 'slide_from_bottom', presentation: 'modal' }}
+            />
+            <RootStack.Screen
+              name="PrimaryIpList"
+              component={PrimaryIpListScreen}
+              options={{ animation: 'slide_from_right' }}
+            />
+            <RootStack.Screen
+              name="PricingCalculator"
+              component={PricingCalculatorScreen}
+              options={{ animation: 'slide_from_right' }}
             />
           </>
         )}

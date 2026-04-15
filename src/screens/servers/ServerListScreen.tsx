@@ -14,8 +14,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useServerStore } from '../../store/serverStore';
+import { useFavoritesStore } from '../../store/favoritesStore';
 import { powerOnServer, powerOffServer, rebootServer, deleteServer } from '../../api/servers';
 import { Spacing, BorderRadius, Typography } from '../../theme';
 import type { ThemeColors } from '../../theme';
@@ -27,16 +29,18 @@ import type { Server, ServerStatus } from '../../models';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
-const runningActions = [
+const runningActions = (fav: boolean) => [
   { label: 'View Details', icon: 'monitor' },
   { label: 'Open Console', icon: 'console' },
+  { label: fav ? 'Unfavorite' : 'Favorite', icon: fav ? 'star-off-outline' : 'star-outline' },
   { label: 'Reboot', icon: 'restart' },
   { label: 'Power Off', icon: 'power', destructive: true },
   { label: 'Delete', icon: 'delete-outline', destructive: true },
 ];
 
-const offActions = [
+const offActions = (fav: boolean) => [
   { label: 'View Details', icon: 'monitor' },
+  { label: fav ? 'Unfavorite' : 'Favorite', icon: fav ? 'star-off-outline' : 'star-outline' },
   { label: 'Power On', icon: 'play-circle-outline' },
   { label: 'Delete', icon: 'delete-outline', destructive: true },
 ];
@@ -44,6 +48,7 @@ const offActions = [
 export default function ServerListScreen() {
   const navigation = useNavigation<Nav>();
   const { servers, fetchServers, refreshServers, isLoading } = useServerStore();
+  const { serverIds: favoriteIds, toggle: toggleFavorite, isFavorite } = useFavoritesStore();
   const [sheetVisible, setSheetVisible] = useState(false);
   const [selected, setSelected] = useState<Server | null>(null);
   const [query, setQuery] = useState('');
@@ -51,21 +56,29 @@ export default function ServerListScreen() {
   const styles = makeStyles(colors);
 
   const filtered = useMemo(() => {
-    if (!query.trim()) return servers;
-    const q = query.toLowerCase();
-    return servers.filter(s =>
-      s.name.toLowerCase().includes(q) ||
-      s.datacenter.location.name.toLowerCase().includes(q) ||
-      s.server_type.name.toLowerCase().includes(q) ||
-      s.public_net.ipv4?.ip.includes(q) ||
-      s.public_net.ipv6?.ip.toLowerCase().includes(q),
-    );
-  }, [servers, query]);
+    const base = query.trim()
+      ? (() => {
+          const q = query.toLowerCase();
+          return servers.filter(s =>
+            s.name.toLowerCase().includes(q) ||
+            s.datacenter.location.name.toLowerCase().includes(q) ||
+            s.server_type.name.toLowerCase().includes(q) ||
+            s.public_net.ipv4?.ip.includes(q) ||
+            s.public_net.ipv6?.ip.toLowerCase().includes(q),
+          );
+        })()
+      : servers;
+    return [...base].sort((a, b) => {
+      const af = isFavorite(a.id) ? 0 : 1;
+      const bf = isFavorite(b.id) ? 0 : 1;
+      return af - bf;
+    });
+  }, [servers, query, favoriteIds]);
 
   useEffect(() => { fetchServers(); }, []);
 
   const getActions = (server: Server) =>
-    server.status === 'running' ? runningActions : offActions;
+    server.status === 'running' ? runningActions(isFavorite(server.id)) : offActions(isFavorite(server.id));
 
   const openActions = (server: Server) => {
     Haptics.light();
@@ -94,6 +107,11 @@ export default function ServerListScreen() {
         break;
       case 'Open Console':
         navigation.navigate('VncConsole', { serverId: server.id, serverName: server.name });
+        break;
+      case 'Favorite':
+      case 'Unfavorite':
+        Haptics.light();
+        toggleFavorite(server.id);
         break;
       case 'Reboot':
         Haptics.warning();
@@ -181,6 +199,7 @@ export default function ServerListScreen() {
               onPress={() => navigation.navigate('ServerDetail', { serverId: item.id })}
               onLongPress={() => openActions(item)}
               colors={colors}
+              favorite={isFavorite(item.id)}
             />
           )}
           ListEmptyComponent={
@@ -209,11 +228,13 @@ function ServerRow({
   onPress,
   onLongPress,
   colors,
+  favorite,
 }: {
   server: Server;
   onPress: () => void;
   onLongPress: () => void;
   colors: ThemeColors;
+  favorite: boolean;
 }) {
   const styles = makeStyles(colors);
   const statusColor = getStatusColor(server.status, colors);
@@ -226,7 +247,12 @@ function ServerRow({
       activeOpacity={0.7}
     >
       <View style={styles.rowContent}>
-        <Text style={styles.serverName}>{server.name}</Text>
+        <View style={styles.nameRow}>
+          <Text style={styles.serverName}>{server.name}</Text>
+          {favorite && (
+            <Icon name="star" size={14} color={colors.warning} style={{ marginLeft: 6, marginTop: 2 }} />
+          )}
+        </View>
         <Text style={styles.serverMeta}>
           {server.server_type.name.toUpperCase()} | {server.server_type.architecture} | {server.server_type.disk}GB | {server.datacenter.location.name}
         </Text>
@@ -304,6 +330,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
   },
   rowContent: { flex: 1 },
+  nameRow: { flexDirection: 'row', alignItems: 'center' },
   serverName: { ...Typography.h3, color: c.textPrimary },
   serverMeta: { ...Typography.bodySmall, color: c.textSecondary, marginTop: 2 },
   statusContainer: { flexDirection: 'row', alignItems: 'center', gap: 5 },

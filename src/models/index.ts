@@ -306,6 +306,35 @@ export interface Price {
   price_monthly: { net: string; gross: string };
 }
 
+// ─── Pricing ──────────────────────────────────────────────────────────────────
+
+export interface PriceAmount {
+  net: string;
+  gross: string;
+}
+
+export interface ServerTypePricing {
+  id: number;
+  name: string;
+  pricings: Array<{
+    location: { name: string };
+    price_hourly: PriceAmount;
+    price_monthly: PriceAmount;
+    included_traffic: number;
+    price_per_tb_traffic: PriceAmount;
+  }>;
+}
+
+export interface Pricing {
+  currency: string;
+  vat_rate: string;
+  server_types: ServerTypePricing[];
+  volume: { price_per_gb_month: PriceAmount };
+  server_backup: { percentage: string };
+  floating_ip: { price_monthly: PriceAmount };
+  traffic: { price_per_tb: PriceAmount };
+}
+
 // ─── API Pagination ───────────────────────────────────────────────────────────
 
 export interface Meta {
