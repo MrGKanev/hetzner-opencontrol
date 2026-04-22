@@ -1,6 +1,17 @@
 import { create } from 'zustand';
+import { Platform, NativeModules } from 'react-native';
 import * as serverApi from '../api/servers';
 import type { Server } from '../models';
+
+function syncWidget(servers: Server[]) {
+  if (Platform.OS !== 'android') return;
+  const { WidgetData } = NativeModules;
+  if (!WidgetData) return;
+  const payload = JSON.stringify(
+    servers.map(s => ({ name: s.name, status: s.status }))
+  );
+  WidgetData.updateServers(payload);
+}
 
 interface ServerState {
   servers: Server[];
@@ -29,6 +40,7 @@ export const useServerStore = create<ServerState>((set, get) => ({
     try {
       const servers = await serverApi.getServers();
       set({ servers, isLoading: false, lastFetched: Date.now() });
+      syncWidget(servers);
     } catch (e: any) {
       set({ isLoading: false, error: e.message });
     }
@@ -39,6 +51,7 @@ export const useServerStore = create<ServerState>((set, get) => ({
     try {
       const servers = await serverApi.getServers();
       set({ servers, isLoading: false, lastFetched: Date.now() });
+      syncWidget(servers);
     } catch (e: any) {
       set({ isLoading: false, error: e.message });
     }

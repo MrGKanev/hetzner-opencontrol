@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">HetznerOpenControl</string>
+    <string name="widget_description">Shows the status of your Hetzner servers</string>
 </resources>

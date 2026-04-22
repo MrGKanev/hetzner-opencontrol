@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="28dp"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingStart="2dp"
+    android:paddingEnd="2dp">
+
+    <!-- Status dot -->
+    <TextView
+        android:id="@+id/server_dot"
+        android:layout_width="14dp"
+        android:layout_height="14dp"
+        android:text="●"
+        android:textSize="10sp"
+        android:textColor="#34C759"
+        android:gravity="center"
+        android:layout_marginEnd="8dp" />
+
+    <!-- Server name -->
+    <TextView
+        android:id="@+id/server_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="server"
+        android:textColor="#FFFFFF"
+        android:textSize="12sp"
+        android:singleLine="true"
+        android:ellipsize="end" />
+
+    <!-- Status label -->
+    <TextView
+        android:id="@+id/server_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="running"
+        android:textColor="#8E8E93"
+        android:textSize="11sp"
+        android:layout_marginStart="8dp" />
+
+</LinearLayout>
