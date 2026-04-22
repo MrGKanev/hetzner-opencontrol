@@ -87,6 +87,22 @@ export async function deleteServer(id: number): Promise<Action> {
   return res.data.action;
 }
 
+// ─── Activity Log ────────────────────────────────────────────────────────────
+
+export async function getServerActions(serverId: number): Promise<Action[]> {
+  const all: Action[] = [];
+  let page = 1;
+  while (true) {
+    const res = await getApiClient().get(`/servers/${serverId}/actions`, {
+      params: { page, per_page: 50, sort: 'id:desc' },
+    });
+    all.push(...res.data.actions);
+    if (!res.data.meta?.pagination?.next_page || all.length >= 100) break;
+    page++;
+  }
+  return all;
+}
+
 // ─── Metrics ─────────────────────────────────────────────────────────────────
 
 export type MetricType = 'cpu' | 'disk' | 'network';

@@ -13,18 +13,18 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import type { RootStackParamList } from '../../navigation';
-import { getServer, powerOnServer, powerOffServer, rebootServer, resetServer, shutdownServer, enableRescueMode, rebuildServer, getImages, attachIso, detachIso, getIsos } from '../../api/servers';
+import { getServer, powerOnServer, powerOffServer, rebootServer, resetServer, shutdownServer, enableRescueMode, rebuildServer, getImages, attachIso, detachIso, getIsos, getServerActions } from '../../api/servers';
 import { useServerStore } from '../../store/serverStore';
 import { Spacing, BorderRadius, Typography } from '../../theme';
 import type { ThemeColors } from '../../theme';
 import { useColors } from '../../store/themeStore';
 import { ActionSheetModal, showActionSheet, type ActionSheetOption } from '../../components/common/ActionSheet';
 import { Haptics } from '../../services/haptics';
-import type { Server } from '../../models';
+import type { Server, Action } from '../../models';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ServerDetail'>;
 
-type Tab = 'overview' | 'metrics';
+type Tab = 'overview' | 'metrics' | 'activities';
 
 export default function ServerDetailScreen({ route, navigation }: Props) {
   const { serverId } = route.params;
@@ -33,6 +33,8 @@ export default function ServerDetailScreen({ route, navigation }: Props) {
   const [actionLoading, setActionLoading] = useState(false);
   const [tab, setTab] = useState<Tab>('overview');
   const [sheetVisible, setSheetVisible] = useState(false);
+  const [activities, setActivities] = useState<Action[]>([]);
+  const [activitiesLoading, setActivitiesLoading] = useState(false);
   const colors = useColors();
   const styles = makeStyles(colors);
 
@@ -51,6 +53,15 @@ export default function ServerDetailScreen({ route, navigation }: Props) {
   }, [serverId]);
 
   useEffect(() => { load(); }, []);
+
+  useEffect(() => {
+    if (tab !== 'activities') return;
+    setActivitiesLoading(true);
+    getServerActions(serverId)
+      .then(setActivities)
+      .catch((e: any) => Alert.alert('Error', e.message))
+      .finally(() => setActivitiesLoading(false));
+  }, [tab]);
 
   const runAction = async (label: string, fn: () => Promise<any>) => {
     Haptics.warning();
@@ -326,51 +337,69 @@ export default function ServerDetailScreen({ route, navigation }: Props) {
         >
           <Text style={[styles.tabText]}>Metrics</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, tab === 'activities' && styles.tabActive]}
+          onPress={() => setTab('activities')}
+        >
+          <Text style={[styles.tabText, tab === 'activities' && styles.tabTextActive]}>Activity</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        {/* General Info */}
-        <Section title="General Information" colors={colors}>
-          <InfoRow label="Name" value={server.name} colors={colors} />
-          <InfoRow label="Status" value={server.status} valueColor={server.status === 'running' ? colors.success : colors.textMuted} colors={colors} />
-          <InfoRow label="Created" value={new Date(server.created).toLocaleString()} colors={colors} />
-          <InfoRow label="Type" value={server.server_type.name} colors={colors} />
-          <InfoRow label="Cores" value={String(server.server_type.cores)} colors={colors} />
-          <InfoRow label="Memory" value={`${server.server_type.memory} GB`} colors={colors} />
-          <InfoRow label="Disk" value={`${server.server_type.disk} GB`} colors={colors} />
-          <InfoRow label="Architecture" value={server.server_type.architecture} colors={colors} />
-        </Section>
+        {tab === 'overview' && (
+          <>
+            {/* General Info */}
+            <Section title="General Information" colors={colors}>
+              <InfoRow label="Name" value={server.name} colors={colors} />
+              <InfoRow label="Status" value={server.status} valueColor={server.status === 'running' ? colors.success : colors.textMuted} colors={colors} />
+              <InfoRow label="Created" value={new Date(server.created).toLocaleString()} colors={colors} />
+              <InfoRow label="Type" value={server.server_type.name} colors={colors} />
+              <InfoRow label="Cores" value={String(server.server_type.cores)} colors={colors} />
+              <InfoRow label="Memory" value={`${server.server_type.memory} GB`} colors={colors} />
+              <InfoRow label="Disk" value={`${server.server_type.disk} GB`} colors={colors} />
+              <InfoRow label="Architecture" value={server.server_type.architecture} colors={colors} />
+            </Section>
 
-        {/* Network */}
-        <Section title="Network" colors={colors}>
-          {server.public_net.ipv4 && (
-            <InfoRow label="IPv4" value={server.public_net.ipv4.ip} copyable colors={colors} />
-          )}
-          {server.public_net.ipv6 && (
-            <InfoRow label="IPv6" value={server.public_net.ipv6.ip} copyable colors={colors} />
-          )}
-        </Section>
+            {/* Network */}
+            <Section title="Network" colors={colors}>
+              {server.public_net.ipv4 && (
+                <InfoRow label="IPv4" value={server.public_net.ipv4.ip} copyable colors={colors} />
+              )}
+              {server.public_net.ipv6 && (
+                <InfoRow label="IPv6" value={server.public_net.ipv6.ip} copyable colors={colors} />
+              )}
+            </Section>
 
-        {/* ISO */}
-        {server.iso && (
-          <Section title="Mounted ISO" colors={colors}>
-            <InfoRow label="Name" value={server.iso.description} colors={colors} />
-            <InfoRow label="Type" value={server.iso.type} colors={colors} />
-          </Section>
+            {/* ISO */}
+            {server.iso && (
+              <Section title="Mounted ISO" colors={colors}>
+                <InfoRow label="Name" value={server.iso.description} colors={colors} />
+                <InfoRow label="Type" value={server.iso.type} colors={colors} />
+              </Section>
+            )}
+
+            {/* Location */}
+            <Section title="Location" colors={colors}>
+              <InfoRow label="Datacenter" value={server.datacenter.name} colors={colors} />
+              <InfoRow label="City" value={server.datacenter.location.city} colors={colors} />
+              <InfoRow label="Country" value={server.datacenter.location.country} colors={colors} />
+            </Section>
+
+            {/* Protection */}
+            <Section title="Protection" colors={colors}>
+              <InfoRow label="Delete" value={server.protection.delete ? 'Enabled' : 'Disabled'} colors={colors} />
+              <InfoRow label="Rebuild" value={server.protection.rebuild ? 'Enabled' : 'Disabled'} colors={colors} />
+            </Section>
+          </>
         )}
 
-        {/* Location */}
-        <Section title="Location" colors={colors}>
-          <InfoRow label="Datacenter" value={server.datacenter.name} colors={colors} />
-          <InfoRow label="City" value={server.datacenter.location.city} colors={colors} />
-          <InfoRow label="Country" value={server.datacenter.location.country} colors={colors} />
-        </Section>
-
-        {/* Protection */}
-        <Section title="Protection" colors={colors}>
-          <InfoRow label="Delete" value={server.protection.delete ? 'Enabled' : 'Disabled'} colors={colors} />
-          <InfoRow label="Rebuild" value={server.protection.rebuild ? 'Enabled' : 'Disabled'} colors={colors} />
-        </Section>
+        {tab === 'activities' && (
+          activitiesLoading
+            ? <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
+            : activities.length === 0
+              ? <Text style={{ color: colors.textMuted, textAlign: 'center', marginTop: 40 }}>No activity found</Text>
+              : <ActivityLog actions={activities} colors={colors} />
+        )}
       </ScrollView>
 
       {/* Android Action Sheet */}
@@ -410,6 +439,60 @@ function InfoRow({ label, value, valueColor, copyable, colors }: {
         {value}
         {copyable ? '  📋' : ''}
       </Text>
+    </View>
+  );
+}
+
+const ACTION_LABELS: Record<string, string> = {
+  poweron: 'Power On',
+  poweroff: 'Power Off',
+  reboot: 'Reboot',
+  reset: 'Hard Reset',
+  shutdown: 'Shutdown',
+  rebuild: 'Rebuild',
+  enable_rescue: 'Enable Rescue Mode',
+  disable_rescue: 'Disable Rescue Mode',
+  attach_iso: 'Attach ISO',
+  detach_iso: 'Detach ISO',
+  create_image: 'Create Snapshot',
+  change_type: 'Change Type',
+  request_console: 'Open Console',
+  create_server: 'Create Server',
+  delete_server: 'Delete Server',
+};
+
+function ActivityLog({ actions, colors }: { actions: Action[]; colors: ThemeColors }) {
+  const styles = makeStyles(colors);
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Recent Actions</Text>
+      <View style={styles.sectionCard}>
+        {actions.map((action, idx) => {
+          const label = ACTION_LABELS[action.command] ?? action.command;
+          const statusColor =
+            action.status === 'success' ? colors.success :
+            action.status === 'error' ? '#FF3B30' :
+            colors.primary;
+          const icon =
+            action.status === 'success' ? '✓' :
+            action.status === 'error' ? '✕' : '…';
+          const started = new Date(action.started).toLocaleString();
+          return (
+            <View key={action.id} style={[styles.activityRow, idx === actions.length - 1 && { borderBottomWidth: 0 }]}>
+              <View style={[styles.activityIcon, { backgroundColor: statusColor + '22' }]}>
+                <Text style={[styles.activityIconText, { color: statusColor }]}>{icon}</Text>
+              </View>
+              <View style={styles.activityBody}>
+                <Text style={styles.activityLabel}>{label}</Text>
+                <Text style={styles.activityTime}>{started}</Text>
+              </View>
+              {action.status === 'running' && (
+                <Text style={[styles.activityProgress, { color: colors.primary }]}>{action.progress}%</Text>
+              )}
+            </View>
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -462,4 +545,26 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   },
   infoLabel: { ...Typography.bodySmall, color: c.textSecondary },
   infoValue: { ...Typography.body, color: c.textPrimary, flex: 1, textAlign: 'right' },
+
+  activityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm + 2,
+    borderBottomWidth: 1,
+    borderBottomColor: c.cardBorder,
+    gap: Spacing.sm,
+  },
+  activityIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activityIconText: { fontSize: 13, fontWeight: '700' },
+  activityBody: { flex: 1 },
+  activityLabel: { ...Typography.body, color: c.textPrimary },
+  activityTime: { ...Typography.bodySmall, color: c.textSecondary, marginTop: 1 },
+  activityProgress: { ...Typography.bodySmall, fontWeight: '600' },
 });
