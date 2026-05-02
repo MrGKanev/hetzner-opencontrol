@@ -102,6 +102,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   unlockWithBiometrics: async () => {
+    if (get().isLoading) return false;
     set({ isLoading: true, error: null });
     try {
       const authenticated = await authenticateWithBiometrics('Unlock Hetzner OpenControl');

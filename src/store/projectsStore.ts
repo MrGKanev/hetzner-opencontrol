@@ -135,6 +135,8 @@ export const useProjectsStore = create<ProjectsState>()(
       tryRestoreActiveProject: async () => {
         const { projects, activeProjectId } = get();
         if (!activeProjectId || projects.length === 0) return false;
+        // This is only called on cold start when biometricType === 'none' (App.tsx guards it).
+        // switchProject reads keychain directly — safe because no biometric gate was set.
         return get().switchProject(activeProjectId);
       },
     }),
