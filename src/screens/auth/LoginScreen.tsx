@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -42,10 +42,12 @@ export default function LoginScreen() {
   const styles = makeStyles(colors);
 
   const { login, unlockWithBiometrics, isLoading, error, clearError, biometricType } = useAuthStore();
+  const biometricPromptedRef = useRef(false);
 
-  // Auto-prompt biometrics if we have a saved session
+  // Auto-prompt biometrics once when the screen first appears with a known biometric type
   useEffect(() => {
-    if (biometricType !== 'none') {
+    if (biometricType !== 'none' && !biometricPromptedRef.current) {
+      biometricPromptedRef.current = true;
       handleBiometrics();
     }
   }, [biometricType]);

@@ -71,22 +71,31 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const biometricType = await getBiometricType();
     set({ biometricType });
 
+    // If biometrics are available, require the user to authenticate manually —
+    // do NOT auto-login with the stored key. The LoginScreen will show the
+    // biometric button and call unlockWithBiometrics().
+    if (biometricType !== 'none') {
+      // Peek at keychain to see if a key exists (no biometric prompt, no ACCESS_CONTROL).
+      try {
+        const credentials = await Keychain.getGenericPassword({ service: KEYCHAIN_SERVICE });
+        if (credentials && credentials.password) {
+          // Credentials exist — stay on login screen so biometrics can gate access.
+          return false;
+        }
+      } catch {
+        // No credentials saved — show login screen.
+      }
+      return false;
+    }
+
     try {
-      // On iOS we can check keychain existence without biometric prompt.
-      // On Android we read directly (no ACCESS_CONTROL set on save, so no prompt needed).
-      const credentials = await Keychain.getGenericPassword({
-        service: KEYCHAIN_SERVICE,
-        ...(Platform.OS === 'ios'
-          ? { authenticationPrompt: { title: 'Unlock Hetzner OpenControl' } }
-          : {}),
-      });
+      const credentials = await Keychain.getGenericPassword({ service: KEYCHAIN_SERVICE });
       if (credentials && credentials.password) {
         createApiClient(credentials.password);
         await getServers();
         return true;
       }
     } catch {
-      // Keychain access denied or no credentials - show login screen
       destroyApiClient();
     }
     return false;
