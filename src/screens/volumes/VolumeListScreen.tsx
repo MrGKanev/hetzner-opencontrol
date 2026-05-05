@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -8,16 +8,17 @@ import {
   RefreshControl,
   ActivityIndicator,
   Alert,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { getVolumes, deleteVolume, detachVolume, attachVolume } from '../../api/volumes';
+import { getVolumes, deleteVolume, detachVolume } from '../../api/volumes';
 import { Spacing, BorderRadius, Typography } from '../../theme';
 import type { ThemeColors } from '../../theme';
 import { useColors } from '../../store/themeStore';
-import { ActionSheetModal, showActionSheet } from '../../components/common/ActionSheet';
+import { ActionSheetModal } from '../../components/common/ActionSheet';
 import type { Volume } from '../../models';
+import { useResourceList } from '../../hooks/useResourceList';
+import { confirmDelete } from '../../utils/dialogs';
 
 const attachedActions = [
   { label: 'Detach', icon: '⏏️' },
@@ -29,49 +30,15 @@ const freeActions = [
 ];
 
 export default function VolumeListScreen() {
-  const [volumes, setVolumes] = useState<Volume[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [sheetVisible, setSheetVisible] = useState(false);
-  const [selected, setSelected] = useState<Volume | null>(null);
   const colors = useColors();
   const styles = makeStyles(colors);
 
-  const load = async () => {
-    try {
-      setVolumes(await getVolumes());
-    } catch (e: any) {
-      Alert.alert('Error', e.message);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
+  const { data: volumes, setData: setVolumes, loading, refreshing, selected, sheetVisible, setSheetVisible, refresh, load, openSheet } =
+    useResourceList(getVolumes);
 
-  useEffect(() => { load(); }, []);
+  const getActions = (volume: Volume) => volume.server !== null ? attachedActions : freeActions;
 
-  const getActions = (volume: Volume) =>
-    volume.server !== null ? attachedActions : freeActions;
-
-  const openActions = (volume: Volume) => {
-    setSelected(volume);
-    const actions = getActions(volume);
-    if (Platform.OS === 'ios') {
-      showActionSheet({
-        title: volume.name,
-        options: actions,
-        onSelect: i => handleAction(i, actions, volume),
-      });
-    } else {
-      setSheetVisible(true);
-    }
-  };
-
-  const handleAction = async (
-    index: number,
-    actions: typeof attachedActions,
-    volume: Volume,
-  ) => {
+  const handleAction = async (index: number, actions: typeof attachedActions, volume: Volume) => {
     const label = actions[index].label;
     switch (label) {
       case 'Detach':
@@ -89,18 +56,10 @@ export default function VolumeListScreen() {
         ]);
         break;
       case 'Delete':
-        Alert.alert('Delete Volume', `Delete "${volume.name}"? All data will be lost.`, [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Delete', style: 'destructive',
-            onPress: async () => {
-              try {
-                await deleteVolume(volume.id);
-                setVolumes(prev => prev.filter(v => v.id !== volume.id));
-              } catch (e: any) { Alert.alert('Error', e.message); }
-            },
-          },
-        ]);
+        confirmDelete(volume.name, async () => {
+          await deleteVolume(volume.id);
+          setVolumes(prev => prev.filter(v => v.id !== volume.id));
+        });
         break;
     }
   };
@@ -118,19 +77,15 @@ export default function VolumeListScreen() {
           data={volumes}
           keyExtractor={v => String(v.id)}
           refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={() => { setRefreshing(true); load(); }}
-              tintColor={colors.primary}
-            />
+            <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.primary} />
           }
           contentContainerStyle={styles.list}
           ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
           renderItem={({ item }) => (
             <VolumeRow
               volume={item}
-              onPress={() => openActions(item)}
-              onLongPress={() => openActions(item)}
+              onPress={() => openSheet(item, item.name, getActions(item), i => handleAction(i, getActions(item), item))}
+              onLongPress={() => openSheet(item, item.name, getActions(item), i => handleAction(i, getActions(item), item))}
               colors={colors}
             />
           )}

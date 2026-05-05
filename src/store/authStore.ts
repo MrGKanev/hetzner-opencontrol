@@ -37,7 +37,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         // trigger a biometric/passcode prompt while the spinner is showing, causing
         // the app to hang silently. Biometric gate is enforced manually in
         // unlockWithBiometrics before we ever read the key back.
-        const keychainOptions: Keychain.Options = Platform.OS === 'ios'
+        const keychainOptions: Keychain.SetOptions = Platform.OS === 'ios'
           ? {
               service: KEYCHAIN_SERVICE,
               accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,

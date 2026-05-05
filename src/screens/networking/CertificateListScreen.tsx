@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -7,8 +7,6 @@ import {
   StyleSheet,
   RefreshControl,
   ActivityIndicator,
-  Alert,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -18,7 +16,9 @@ import type { Certificate } from '../../models';
 import { Spacing, BorderRadius, Typography } from '../../theme';
 import type { ThemeColors } from '../../theme';
 import { useColors } from '../../store/themeStore';
-import { ActionSheetModal, showActionSheet } from '../../components/common/ActionSheet';
+import { ActionSheetModal } from '../../components/common/ActionSheet';
+import { useResourceList } from '../../hooks/useResourceList';
+import { confirmDelete } from '../../utils/dialogs';
 
 const actions = [
   { label: 'Delete', icon: '🗑', destructive: true },
@@ -38,56 +38,18 @@ function expiryStatus(notAfter: string | null): 'valid' | 'expiring' | 'expired'
 }
 
 export default function CertificateListScreen() {
-  const [certs, setCerts] = useState<Certificate[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [selected, setSelected] = useState<Certificate | null>(null);
-  const [sheetVisible, setSheetVisible] = useState(false);
   const colors = useColors();
   const styles = makeStyles(colors);
 
-  const load = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
-    else setLoading(true);
-    try {
-      setCerts(await getCertificates());
-    } catch (e: any) {
-      Alert.alert('Error', e.message);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
-
-  const openActions = (cert: Certificate) => {
-    setSelected(cert);
-    if (Platform.OS === 'ios') {
-      showActionSheet({
-        title: cert.name,
-        options: actions,
-        onSelect: i => handleAction(i, cert),
-      });
-    } else {
-      setSheetVisible(true);
-    }
-  };
+  const { data: certs, setData: setCerts, loading, refreshing, selected, sheetVisible, setSheetVisible, refresh, openSheet } =
+    useResourceList(getCertificates);
 
   const handleAction = async (index: number, cert: Certificate) => {
     if (actions[index].label === 'Delete') {
-      Alert.alert('Delete Certificate', `Delete "${cert.name}"? This cannot be undone.`, [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete', style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteCertificate(cert.id);
-              setCerts(prev => prev.filter(c => c.id !== cert.id));
-            } catch (e: any) { Alert.alert('Error', e.message); }
-          },
-        },
-      ]);
+      confirmDelete(cert.name, async () => {
+        await deleteCertificate(cert.id);
+        setCerts(prev => prev.filter(c => c.id !== cert.id));
+      });
     }
   };
 
@@ -97,7 +59,7 @@ export default function CertificateListScreen() {
     const statusLabel = status === 'valid' ? 'Valid' : status === 'expiring' ? 'Expiring soon' : status === 'expired' ? 'Expired' : 'Unknown';
 
     return (
-      <TouchableOpacity style={styles.card} onPress={() => openActions(item)} activeOpacity={0.75}>
+      <TouchableOpacity style={styles.card} onPress={() => openSheet(item, item.name, actions, i => handleAction(i, item))} activeOpacity={0.75}>
         <View style={styles.iconWrap}>
           <Icon name="certificate-outline" size={20} color={colors.primary} />
         </View>
@@ -140,7 +102,7 @@ export default function CertificateListScreen() {
           contentContainerStyle={styles.list}
           ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={() => load(true)} tintColor={colors.primary} />
+            <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.primary} />
           }
           ListEmptyComponent={
             <View style={styles.center}>

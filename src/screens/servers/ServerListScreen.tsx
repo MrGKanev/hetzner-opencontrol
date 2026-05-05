@@ -26,6 +26,7 @@ import { ActionSheetModal, showActionSheet } from '../../components/common/Actio
 import { Haptics } from '../../services/haptics';
 import type { RootStackParamList } from '../../navigation';
 import type { Server, ServerStatus } from '../../models';
+import { getStatusColor, capitalizeFirst } from '../../utils/serverStatus';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -97,7 +98,7 @@ export default function ServerListScreen() {
 
   const handleAction = async (
     index: number,
-    actions: typeof runningActions,
+    actions: ReturnType<typeof runningActions>,
     server: Server,
   ) => {
     const label = actions[index].label;
@@ -267,21 +268,6 @@ function ServerRow({
   );
 }
 
-function getStatusColor(status: ServerStatus, colors: ThemeColors): string {
-  switch (status) {
-    case 'running': return colors.success;
-    case 'off': return colors.textMuted;
-    case 'starting':
-    case 'stopping': return colors.warning;
-    case 'rebuilding':
-    case 'migrating': return colors.info;
-    default: return colors.textMuted;
-  }
-}
-
-function capitalizeFirst(s: string) {
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
 
 const makeStyles = (c: ThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: c.background },

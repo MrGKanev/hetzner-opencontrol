@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { getSshKeys, createSshKey, deleteSshKey, updateSshKey } from '../../api/sshKeys';
+import { confirmDelete } from '../../utils/dialogs';
 import type { SSHKey } from '../../models';
 import { Spacing, BorderRadius, Typography } from '../../theme';
 import type { ThemeColors } from '../../theme';
@@ -72,25 +73,10 @@ export default function SshKeyListScreen() {
   };
 
   const handleDelete = (key: SSHKey) => {
-    Alert.alert(
-      'Delete SSH Key',
-      `Delete "${key.name}"? This cannot be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteSshKey(key.id);
-              setKeys(prev => prev.filter(k => k.id !== key.id));
-            } catch (e: any) {
-              Alert.alert('Error', e.message);
-            }
-          },
-        },
-      ],
-    );
+    confirmDelete(key.name, async () => {
+      await deleteSshKey(key.id);
+      setKeys(prev => prev.filter(k => k.id !== key.id));
+    });
   };
 
   const handleRename = async () => {

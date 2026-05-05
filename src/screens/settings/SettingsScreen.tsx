@@ -501,4 +501,17 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     paddingVertical: 6,
     fontSize: 15,
   },
+  button: {
+    backgroundColor: c.primary,
+    borderRadius: BorderRadius.sm,
+    paddingVertical: Spacing.sm,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    marginTop: Spacing.sm,
+  },
+  buttonText: {
+    ...Typography.body,
+    color: c.textPrimary,
+    fontWeight: '600' as const,
+  },
 });

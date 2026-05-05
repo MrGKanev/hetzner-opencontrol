@@ -15,7 +15,8 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useServerStore } from '../../store/serverStore';
 import { getLocations } from '../../api/locations';
-import { getFloatingIPs, getPrimaryIPs, getLoadBalancers, getFirewalls, getNetworks } from '../../api/networking';
+import { getPrimaryIPs, getLoadBalancers, getFirewalls, getNetworks } from '../../api/networking';
+import { getFloatingIps } from '../../api/floatingIps';
 import { getVolumes } from '../../api/volumes';
 import { Spacing, BorderRadius, Typography } from '../../theme';
 import type { ThemeColors } from '../../theme';
@@ -23,6 +24,7 @@ import { useColors } from '../../store/themeStore';
 import GlobeView, { type GlobeMarker as MapMarker } from '../../components/common/GlobeView';
 import type { RootStackParamList } from '../../navigation';
 import type { Location } from '../../models';
+import { getStatusColor, capitalizeFirst } from '../../utils/serverStatus';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -52,7 +54,7 @@ export default function DashboardScreen() {
         getLocations(),
         getLoadBalancers(),
         getPrimaryIPs(),
-        getFloatingIPs(),
+        getFloatingIps(),
         getVolumes(),
         getFirewalls(),
         getNetworks(),
@@ -128,14 +130,12 @@ export default function DashboardScreen() {
               {(['running', 'off', 'starting', 'stopping'] as const).map(status => {
                 const count = servers.filter(s => s.status === status).length;
                 if (count === 0) return null;
-                const color = status === 'running' ? colors.success
-                  : status === 'off' ? colors.textMuted
-                  : colors.warning;
+                const color = getStatusColor(status, colors);
                 return (
                   <View key={status} style={[styles.statusChip, { borderColor: color + '44', backgroundColor: color + '14' }]}>
                     <View style={[styles.statusDot, { backgroundColor: color }]} />
                     <Text style={[styles.statusChipCount, { color }]}>{count}</Text>
-                    <Text style={styles.statusChipLabel}>{status.charAt(0).toUpperCase() + status.slice(1)}</Text>
+                    <Text style={styles.statusChipLabel}>{capitalizeFirst(status)}</Text>
                   </View>
                 );
               })}
@@ -144,8 +144,7 @@ export default function DashboardScreen() {
             {/* Recent servers */}
             <View style={styles.serverList}>
               {servers.slice(0, 4).map(s => {
-                const statusColor = s.status === 'running' ? colors.success
-                  : s.status === 'off' ? colors.textMuted : colors.warning;
+                const statusColor = getStatusColor(s.status, colors);
                 const ip = s.public_net.ipv4?.ip;
                 return (
                   <TouchableOpacity

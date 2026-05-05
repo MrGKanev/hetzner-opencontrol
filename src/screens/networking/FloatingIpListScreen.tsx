@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,6 @@ import {
   RefreshControl,
   ActivityIndicator,
   Alert,
-  Platform,
   Clipboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,7 +18,9 @@ import type { FloatingIP } from '../../models';
 import { Spacing, BorderRadius, Typography } from '../../theme';
 import type { ThemeColors } from '../../theme';
 import { useColors } from '../../store/themeStore';
-import { ActionSheetModal, showActionSheet } from '../../components/common/ActionSheet';
+import { ActionSheetModal } from '../../components/common/ActionSheet';
+import { useResourceList } from '../../hooks/useResourceList';
+import { confirmDelete } from '../../utils/dialogs';
 
 const assignedActions = [
   { label: 'Copy IP', icon: '📋' },
@@ -33,43 +34,13 @@ const freeActions = [
 ];
 
 export default function FloatingIpListScreen() {
-  const [ips, setIps] = useState<FloatingIP[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [selected, setSelected] = useState<FloatingIP | null>(null);
-  const [sheetVisible, setSheetVisible] = useState(false);
   const colors = useColors();
   const styles = makeStyles(colors);
 
-  const load = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
-    else setLoading(true);
-    try {
-      setIps(await getFloatingIps());
-    } catch (e: any) {
-      Alert.alert('Error', e.message);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
+  const { data: ips, setData: setIps, loading, refreshing, selected, sheetVisible, setSheetVisible, refresh, openSheet } =
+    useResourceList(getFloatingIps);
 
   const getActions = (ip: FloatingIP) => ip.server !== null ? assignedActions : freeActions;
-
-  const openActions = (ip: FloatingIP) => {
-    setSelected(ip);
-    if (Platform.OS === 'ios') {
-      showActionSheet({
-        title: ip.name || ip.ip,
-        options: getActions(ip),
-        onSelect: i => handleAction(i, getActions(ip), ip),
-      });
-    } else {
-      setSheetVisible(true);
-    }
-  };
 
   const handleAction = async (index: number, actions: typeof assignedActions, ip: FloatingIP) => {
     const label = actions[index].label;
@@ -95,28 +66,21 @@ export default function FloatingIpListScreen() {
         break;
 
       case 'Delete':
-        Alert.alert('Delete Floating IP', `Delete ${ip.ip}? This cannot be undone.`, [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Delete', style: 'destructive',
-            onPress: async () => {
-              try {
-                await deleteFloatingIp(ip.id);
-                setIps(prev => prev.filter(i => i.id !== ip.id));
-              } catch (e: any) { Alert.alert('Error', e.message); }
-            },
-          },
-        ]);
+        confirmDelete(ip.name || ip.ip, async () => {
+          await deleteFloatingIp(ip.id);
+          setIps(prev => prev.filter(i => i.id !== ip.id));
+        });
         break;
     }
   };
 
   const renderItem = ({ item }: { item: FloatingIP }) => {
     const isAssigned = item.server !== null;
+    const actions = getActions(item);
     return (
       <TouchableOpacity
         style={styles.card}
-        onPress={() => openActions(item)}
+        onPress={() => openSheet(item, item.name || item.ip, actions, i => handleAction(i, actions, item))}
         activeOpacity={0.75}
       >
         <View style={styles.cardLeft}>
@@ -163,7 +127,7 @@ export default function FloatingIpListScreen() {
           contentContainerStyle={styles.list}
           ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={() => load(true)} tintColor={colors.primary} />
+            <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.primary} />
           }
           ListEmptyComponent={
             <View style={styles.center}>

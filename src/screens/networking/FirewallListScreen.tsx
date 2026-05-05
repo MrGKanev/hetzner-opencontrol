@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -7,8 +7,6 @@ import {
   StyleSheet,
   RefreshControl,
   ActivityIndicator,
-  Alert,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -18,9 +16,11 @@ import { getFirewalls, deleteFirewall } from '../../api/networking';
 import { Spacing, BorderRadius, Typography } from '../../theme';
 import type { ThemeColors } from '../../theme';
 import { useColors } from '../../store/themeStore';
-import { ActionSheetModal, showActionSheet } from '../../components/common/ActionSheet';
+import { ActionSheetModal } from '../../components/common/ActionSheet';
 import type { Firewall } from '../../models';
 import type { NetworkingStackParamList } from '../../navigation/NetworkingNavigator';
+import { useResourceList } from '../../hooks/useResourceList';
+import { confirmDelete } from '../../utils/dialogs';
 
 type Nav = NativeStackNavigationProp<NetworkingStackParamList>;
 
@@ -31,35 +31,11 @@ const ACTIONS = [
 
 export default function FirewallListScreen() {
   const navigation = useNavigation<Nav>();
-  const [firewalls, setFirewalls] = useState<Firewall[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [sheetVisible, setSheetVisible] = useState(false);
-  const [selectedFirewall, setSelectedFirewall] = useState<Firewall | null>(null);
   const colors = useColors();
   const styles = makeStyles(colors);
 
-  const load = async () => {
-    try {
-      setFirewalls(await getFirewalls());
-    } catch (e: any) {
-      Alert.alert('Error', e.message);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => { load(); }, []);
-
-  const openActions = (fw: Firewall) => {
-    setSelectedFirewall(fw);
-    if (Platform.OS === 'ios') {
-      showActionSheet({ title: fw.name, options: ACTIONS, onSelect: i => handleAction(i, fw) });
-    } else {
-      setSheetVisible(true);
-    }
-  };
+  const { data: firewalls, setData: setFirewalls, loading, refreshing, selected, sheetVisible, setSheetVisible, refresh, openSheet } =
+    useResourceList(getFirewalls);
 
   const handleAction = (index: number, fw: Firewall) => {
     switch (index) {
@@ -67,18 +43,10 @@ export default function FirewallListScreen() {
         navigation.navigate('FirewallDetail', { firewallId: fw.id });
         break;
       case 1:
-        Alert.alert('Delete Firewall', `Delete "${fw.name}"? This cannot be undone.`, [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Delete', style: 'destructive',
-            onPress: async () => {
-              try {
-                await deleteFirewall(fw.id);
-                setFirewalls(prev => prev.filter(f => f.id !== fw.id));
-              } catch (e: any) { Alert.alert('Error', e.message); }
-            },
-          },
-        ]);
+        confirmDelete(fw.name, async () => {
+          await deleteFirewall(fw.id);
+          setFirewalls(prev => prev.filter(f => f.id !== fw.id));
+        });
         break;
     }
   };
@@ -98,14 +66,14 @@ export default function FirewallListScreen() {
         <FlatList
           data={firewalls}
           keyExtractor={f => String(f.id)}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.primary} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.primary} />}
           contentContainerStyle={styles.list}
           ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
           renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.row}
               onPress={() => navigation.navigate('FirewallDetail', { firewallId: item.id })}
-              onLongPress={() => openActions(item)}
+              onLongPress={() => openSheet(item, item.name, ACTIONS, i => handleAction(i, item))}
               activeOpacity={0.7}
             >
               <View style={styles.rowLeft}>
@@ -114,7 +82,7 @@ export default function FirewallListScreen() {
                   {item.rules.length} rule{item.rules.length !== 1 ? 's' : ''} · {item.applied_to.length} applied
                 </Text>
               </View>
-              <TouchableOpacity onPress={() => openActions(item)} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+              <TouchableOpacity onPress={() => openSheet(item, item.name, ACTIONS, i => handleAction(i, item))} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
                 <Text style={styles.menuDots}>•••</Text>
               </TouchableOpacity>
             </TouchableOpacity>
@@ -125,9 +93,9 @@ export default function FirewallListScreen() {
 
       <ActionSheetModal
         visible={sheetVisible}
-        title={selectedFirewall?.name}
+        title={selected?.name}
         options={ACTIONS}
-        onSelect={i => { if (selectedFirewall) handleAction(i, selectedFirewall); }}
+        onSelect={i => { if (selected) handleAction(i, selected); }}
         onCancel={() => setSheetVisible(false)}
       />
     </SafeAreaView>

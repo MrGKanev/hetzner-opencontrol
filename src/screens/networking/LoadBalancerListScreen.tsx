@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -7,8 +7,6 @@ import {
   StyleSheet,
   RefreshControl,
   ActivityIndicator,
-  Alert,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -18,9 +16,11 @@ import { getLoadBalancers, deleteLoadBalancer } from '../../api/networking';
 import { Spacing, BorderRadius, Typography } from '../../theme';
 import type { ThemeColors } from '../../theme';
 import { useColors } from '../../store/themeStore';
-import { ActionSheetModal, showActionSheet } from '../../components/common/ActionSheet';
+import { ActionSheetModal } from '../../components/common/ActionSheet';
 import type { LoadBalancer } from '../../models';
 import type { NetworkingStackParamList } from '../../navigation/NetworkingNavigator';
+import { useResourceList } from '../../hooks/useResourceList';
+import { confirmDelete } from '../../utils/dialogs';
 
 type Nav = NativeStackNavigationProp<NetworkingStackParamList>;
 
@@ -31,35 +31,11 @@ const ACTIONS = [
 
 export default function LoadBalancerListScreen() {
   const navigation = useNavigation<Nav>();
-  const [lbs, setLbs] = useState<LoadBalancer[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [sheetVisible, setSheetVisible] = useState(false);
-  const [selected, setSelected] = useState<LoadBalancer | null>(null);
   const colors = useColors();
   const styles = makeStyles(colors);
 
-  const load = async () => {
-    try {
-      setLbs(await getLoadBalancers());
-    } catch (e: any) {
-      Alert.alert('Error', e.message);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => { load(); }, []);
-
-  const openActions = (lb: LoadBalancer) => {
-    setSelected(lb);
-    if (Platform.OS === 'ios') {
-      showActionSheet({ title: lb.name, options: ACTIONS, onSelect: i => handleAction(i, lb) });
-    } else {
-      setSheetVisible(true);
-    }
-  };
+  const { data: lbs, setData: setLbs, loading, refreshing, selected, sheetVisible, setSheetVisible, refresh, openSheet } =
+    useResourceList(getLoadBalancers);
 
   const handleAction = (index: number, lb: LoadBalancer) => {
     switch (index) {
@@ -67,18 +43,10 @@ export default function LoadBalancerListScreen() {
         navigation.navigate('LoadBalancerDetail', { lbId: lb.id });
         break;
       case 1:
-        Alert.alert('Delete Load Balancer', `Delete "${lb.name}"?`, [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Delete', style: 'destructive',
-            onPress: async () => {
-              try {
-                await deleteLoadBalancer(lb.id);
-                setLbs(prev => prev.filter(l => l.id !== lb.id));
-              } catch (e: any) { Alert.alert('Error', e.message); }
-            },
-          },
-        ]);
+        confirmDelete(lb.name, async () => {
+          await deleteLoadBalancer(lb.id);
+          setLbs(prev => prev.filter(l => l.id !== lb.id));
+        });
         break;
     }
   };
@@ -95,7 +63,7 @@ export default function LoadBalancerListScreen() {
         <FlatList
           data={lbs}
           keyExtractor={lb => String(lb.id)}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.primary} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.primary} />}
           contentContainerStyle={styles.list}
           ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
           renderItem={({ item }) => (
@@ -116,7 +84,7 @@ export default function LoadBalancerListScreen() {
                   <Text style={styles.lbIp}>{item.public_net.ipv4.ip}</Text>
                 )}
               </View>
-              <TouchableOpacity onPress={() => openActions(item)} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+              <TouchableOpacity onPress={() => openSheet(item, item.name, ACTIONS, i => handleAction(i, item))} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
                 <Text style={styles.menuDots}>•••</Text>
               </TouchableOpacity>
             </TouchableOpacity>

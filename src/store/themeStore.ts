@@ -13,11 +13,11 @@ export const useThemeStore = create<ThemeState>()(
   persist(
     (set) => ({
       isDark: true,
-      colors: darkColors,
+      colors: darkColors as ThemeColors,
       toggle: () =>
         set((s) => {
           const isDark = !s.isDark;
-          return { isDark, colors: isDark ? darkColors : lightColors };
+          return { isDark, colors: (isDark ? darkColors : lightColors) as ThemeColors };
         }),
     }),
     {
@@ -26,7 +26,7 @@ export const useThemeStore = create<ThemeState>()(
       // Only persist isDark; rehydrate colors from it
       onRehydrateStorage: () => (state) => {
         if (state) {
-          state.colors = state.isDark ? darkColors : lightColors;
+          state.colors = (state.isDark ? darkColors : lightColors) as ThemeColors;
         }
       },
     },

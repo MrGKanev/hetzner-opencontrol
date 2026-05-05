@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -7,8 +7,6 @@ import {
   StyleSheet,
   RefreshControl,
   ActivityIndicator,
-  Alert,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -18,9 +16,11 @@ import { getNetworks, deleteNetwork } from '../../api/networking';
 import { Spacing, BorderRadius, Typography } from '../../theme';
 import type { ThemeColors } from '../../theme';
 import { useColors } from '../../store/themeStore';
-import { ActionSheetModal, showActionSheet } from '../../components/common/ActionSheet';
+import { ActionSheetModal } from '../../components/common/ActionSheet';
 import type { Network } from '../../models';
 import type { NetworkingStackParamList } from '../../navigation/NetworkingNavigator';
+import { useResourceList } from '../../hooks/useResourceList';
+import { confirmDelete } from '../../utils/dialogs';
 
 type Nav = NativeStackNavigationProp<NetworkingStackParamList>;
 
@@ -31,35 +31,11 @@ const ACTIONS = [
 
 export default function NetworkListScreen() {
   const navigation = useNavigation<Nav>();
-  const [networks, setNetworks] = useState<Network[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [sheetVisible, setSheetVisible] = useState(false);
-  const [selected, setSelected] = useState<Network | null>(null);
   const colors = useColors();
   const styles = makeStyles(colors);
 
-  const load = async () => {
-    try {
-      setNetworks(await getNetworks());
-    } catch (e: any) {
-      Alert.alert('Error', e.message);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => { load(); }, []);
-
-  const openActions = (net: Network) => {
-    setSelected(net);
-    if (Platform.OS === 'ios') {
-      showActionSheet({ title: net.name, options: ACTIONS, onSelect: i => handleAction(i, net) });
-    } else {
-      setSheetVisible(true);
-    }
-  };
+  const { data: networks, setData: setNetworks, loading, refreshing, selected, sheetVisible, setSheetVisible, refresh, openSheet } =
+    useResourceList(getNetworks);
 
   const handleAction = (index: number, net: Network) => {
     switch (index) {
@@ -67,18 +43,10 @@ export default function NetworkListScreen() {
         navigation.navigate('NetworkDetail', { networkId: net.id });
         break;
       case 1:
-        Alert.alert('Delete Network', `Delete "${net.name}"?`, [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Delete', style: 'destructive',
-            onPress: async () => {
-              try {
-                await deleteNetwork(net.id);
-                setNetworks(prev => prev.filter(n => n.id !== net.id));
-              } catch (e: any) { Alert.alert('Error', e.message); }
-            },
-          },
-        ]);
+        confirmDelete(net.name, async () => {
+          await deleteNetwork(net.id);
+          setNetworks(prev => prev.filter(n => n.id !== net.id));
+        });
         break;
     }
   };
@@ -95,7 +63,7 @@ export default function NetworkListScreen() {
         <FlatList
           data={networks}
           keyExtractor={n => String(n.id)}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.primary} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.primary} />}
           contentContainerStyle={styles.list}
           ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
           renderItem={({ item }) => (
@@ -110,7 +78,7 @@ export default function NetworkListScreen() {
                   {item.ip_range} · {item.subnets.length} subnet{item.subnets.length !== 1 ? 's' : ''} · {item.servers.length} server{item.servers.length !== 1 ? 's' : ''}
                 </Text>
               </View>
-              <TouchableOpacity onPress={() => openActions(item)} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+              <TouchableOpacity onPress={() => openSheet(item, item.name, ACTIONS, i => handleAction(i, item))} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
                 <Text style={styles.menuDots}>•••</Text>
               </TouchableOpacity>
             </TouchableOpacity>

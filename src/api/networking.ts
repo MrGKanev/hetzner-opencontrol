@@ -1,5 +1,5 @@
 import { getApiClient } from './client';
-import type { Firewall, FirewallRule, Network, FloatingIP, PrimaryIP, LoadBalancer, Certificate, Action } from '../models';
+import type { Firewall, FirewallRule, Network, PrimaryIP, LoadBalancer, Certificate, Action } from '../models';
 
 // ─── Firewalls ────────────────────────────────────────────────────────────────
 
@@ -46,27 +46,6 @@ export async function createNetwork(params: { name: string; ip_range: string; su
 
 export async function deleteNetwork(id: number): Promise<void> {
   await getApiClient().delete(`/networks/${id}`);
-}
-
-// ─── Floating IPs ─────────────────────────────────────────────────────────────
-
-export async function getFloatingIPs(): Promise<FloatingIP[]> {
-  const res = await getApiClient().get('/floating_ips', { params: { per_page: 100 } });
-  return res.data.floating_ips;
-}
-
-export async function assignFloatingIP(id: number, server: number): Promise<Action> {
-  const res = await getApiClient().post(`/floating_ips/${id}/actions/assign`, { server });
-  return res.data.action;
-}
-
-export async function unassignFloatingIP(id: number): Promise<Action> {
-  const res = await getApiClient().post(`/floating_ips/${id}/actions/unassign`);
-  return res.data.action;
-}
-
-export async function deleteFloatingIP(id: number): Promise<void> {
-  await getApiClient().delete(`/floating_ips/${id}`);
 }
 
 // ─── Primary IPs ─────────────────────────────────────────────────────────────

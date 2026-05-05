@@ -18,10 +18,10 @@ import { getVolumes } from '../../api/volumes';
 import {
   getFirewalls,
   getNetworks,
-  getFloatingIPs,
   getPrimaryIPs,
   getLoadBalancers,
 } from '../../api/networking';
+import { getFloatingIps } from '../../api/floatingIps';
 import { Spacing, BorderRadius, Typography } from '../../theme';
 import { useColors } from '../../store/themeStore';
 import type { ThemeColors } from '../../theme';
@@ -88,7 +88,7 @@ export default function SearchScreen() {
           getVolumes(),
           getFirewalls(),
           getNetworks(),
-          getFloatingIPs(),
+          getFloatingIps(),
           getPrimaryIPs(),
           getLoadBalancers(),
         ]);

@@ -14,7 +14,7 @@ export interface Project {
 
 const keychainService = (id: string) => `HetznerOpenControl_${id}`;
 
-function keychainOptions(id: string): Keychain.Options {
+function keychainOptions(id: string): Keychain.SetOptions {
   return Platform.OS === 'ios'
     ? { service: keychainService(id), accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY }
     : { service: keychainService(id), storage: Keychain.STORAGE_TYPE.RSA, accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY };
@@ -105,7 +105,7 @@ export const useProjectsStore = create<ProjectsState>()(
         set({ isLoading: true, error: null });
         try {
           const credentials = await Keychain.getGenericPassword({ service: keychainService(id) });
-          if (!credentials?.password) throw new Error('Token not found');
+          if (!credentials || !credentials.password) throw new Error('Token not found');
 
           createApiClient(credentials.password);
           await getServers();
