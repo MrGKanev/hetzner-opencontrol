@@ -15,7 +15,7 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../../navigation";
 import { getServerTypes, getImages, createServer } from "../../api/servers";
 import { getLocations } from "../../api/locations";
-import { useServerStore } from "../../store/serverStore";
+import { invalidateServers } from "../../hooks/useServersQuery";
 import { Spacing, BorderRadius, Typography } from "../../theme";
 import type { ThemeColors } from "../../theme";
 import { useColors } from "../../store/themeStore";
@@ -48,7 +48,6 @@ export default function CreateServerScreen({ navigation }: Props) {
   const colors = useColors();
   const styles = makeStyles(colors);
 
-  const { refreshServers } = useServerStore();
 
   useEffect(() => {
     Promise.all([getLocations(), getServerTypes(), getImages("system")]).then(
@@ -81,7 +80,7 @@ export default function CreateServerScreen({ navigation }: Props) {
         image: selectedImage,
         location: selectedLocation,
       });
-      await refreshServers();
+      await invalidateServers();
       navigation.goBack();
     } catch (e: any) {
       Alert.alert("Error", e.message);

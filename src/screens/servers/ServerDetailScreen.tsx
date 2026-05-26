@@ -28,7 +28,7 @@ import {
   getIsos,
   getServerActions,
 } from "../../api/servers";
-import { useServerStore } from "../../store/serverStore";
+import { updateServerInList } from "../../store/serverStore";
 import { Spacing, BorderRadius, Typography } from "../../theme";
 import type { ThemeColors } from "../../theme";
 import { useColors } from "../../store/themeStore";
@@ -55,8 +55,6 @@ export default function ServerDetailScreen({ route, navigation }: Props) {
   const [activitiesLoading, setActivitiesLoading] = useState(false);
   const colors = useColors();
   const styles = makeStyles(colors);
-
-  const { updateServerInList } = useServerStore();
 
   const load = useCallback(async () => {
     try {

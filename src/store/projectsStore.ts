@@ -5,7 +5,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Keychain from "react-native-keychain";
 import { createApiClient, destroyApiClient } from "../api/client";
 import { getServers } from "../api/servers";
-import { useServerStore } from "./serverStore";
+import { queryClient } from "../api/queryClient";
+import { SERVERS_KEY } from "../hooks/useServersQuery";
 
 export interface Project {
   id: string;
@@ -70,9 +71,7 @@ export const useProjectsStore = create<ProjectsState>()(
             isLoading: false,
           }));
 
-          // Kick off a fresh server load
-          useServerStore.setState({ servers: [], lastFetched: null });
-          useServerStore.getState().fetchServers();
+          queryClient.invalidateQueries({ queryKey: SERVERS_KEY });
 
           // Signal authenticated
           const { useAuthStore } = require("./authStore");
@@ -97,6 +96,7 @@ export const useProjectsStore = create<ProjectsState>()(
             await get().switchProject(remaining[0].id);
           } else {
             destroyApiClient();
+            queryClient.removeQueries({ queryKey: SERVERS_KEY });
             set({ projects: [], activeProjectId: null });
             const { useAuthStore } = require("./authStore");
             useAuthStore.setState({ isAuthenticated: false });
@@ -128,9 +128,7 @@ export const useProjectsStore = create<ProjectsState>()(
 
           set({ activeProjectId: id, isLoading: false });
 
-          // Clear cached server data so screens re-fetch for the new project
-          useServerStore.setState({ servers: [], lastFetched: null });
-          useServerStore.getState().fetchServers();
+          queryClient.invalidateQueries({ queryKey: SERVERS_KEY });
 
           const { useAuthStore } = require("./authStore");
           useAuthStore.setState({ isAuthenticated: true });

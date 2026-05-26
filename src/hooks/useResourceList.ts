@@ -1,36 +1,39 @@
-import { useState, useEffect, useCallback } from "react";
-import { Alert, Platform } from "react-native";
+import { useState, useCallback } from "react";
+import { Platform } from "react-native";
+import { useQuery, useQueryClient, type QueryKey } from "@tanstack/react-query";
 import {
   showActionSheet,
   type ActionSheetOption,
 } from "../components/common/ActionSheet";
 
-export function useResourceList<T>(fetchFn: () => Promise<T[]>) {
-  const [data, setData] = useState<T[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+export function useResourceList<T>(queryKey: QueryKey, fetchFn: () => Promise<T[]>) {
+  const queryClient = useQueryClient();
+  const query = useQuery<T[]>({
+    queryKey,
+    queryFn: fetchFn,
+    staleTime: 60_000,
+  });
+
   const [selected, setSelected] = useState<T | null>(null);
   const [sheetVisible, setSheetVisible] = useState(false);
 
-  const load = useCallback(async () => {
-    try {
-      setData(await fetchFn());
-    } catch (e: any) {
-      Alert.alert("Error", e.message);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [fetchFn]);
+  const setData = useCallback(
+    (updater: T[] | ((prev: T[]) => T[])) => {
+      queryClient.setQueryData(queryKey, (old: T[] | undefined) => {
+        const prev = old ?? [];
+        return typeof updater === "function" ? updater(prev) : updater;
+      });
+    },
+    [queryClient, queryKey],
+  );
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  const load = useCallback(async () => {
+    await queryClient.refetchQueries({ queryKey });
+  }, [queryClient, queryKey]);
 
   const refresh = useCallback(() => {
-    setRefreshing(true);
-    load();
-  }, [load]);
+    queryClient.refetchQueries({ queryKey });
+  }, [queryClient, queryKey]);
 
   const openSheet = useCallback(
     (
@@ -50,10 +53,10 @@ export function useResourceList<T>(fetchFn: () => Promise<T[]>) {
   );
 
   return {
-    data,
+    data: query.data ?? [],
     setData,
-    loading,
-    refreshing,
+    loading: query.isLoading,
+    refreshing: query.isRefetching && !query.isLoading,
     selected,
     setSelected,
     sheetVisible,

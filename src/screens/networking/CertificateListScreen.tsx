@@ -55,7 +55,7 @@ export default function CertificateListScreen() {
     setSheetVisible,
     refresh,
     openSheet,
-  } = useResourceList(getCertificates);
+  } = useResourceList(["certificates"], getCertificates);
 
   const handleAction = async (index: number, cert: Certificate) => {
     if (actions[index].label === "Delete") {

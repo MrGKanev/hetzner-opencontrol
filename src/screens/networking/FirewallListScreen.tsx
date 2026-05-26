@@ -44,7 +44,7 @@ export default function FirewallListScreen() {
     setSheetVisible,
     refresh,
     openSheet,
-  } = useResourceList(getFirewalls);
+  } = useResourceList(["firewalls"], getFirewalls);
 
   const handleAction = (index: number, fw: Firewall) => {
     switch (index) {

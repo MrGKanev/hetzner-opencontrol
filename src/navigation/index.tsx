@@ -6,6 +6,17 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 
 import { useAuthStore } from "../store/authStore";
 import { useColors } from "../store/themeStore";
+import ScreenErrorBoundary from "../components/common/ScreenErrorBoundary";
+
+function safe<P extends object>(Component: React.ComponentType<P>) {
+  return function SafeScreen(props: P) {
+    return (
+      <ScreenErrorBoundary>
+        <Component {...props} />
+      </ScreenErrorBoundary>
+    );
+  };
+}
 
 // Screens
 import LoginScreen from "../screens/auth/LoginScreen";
@@ -160,17 +171,17 @@ export default function Navigation() {
             <RootStack.Screen name="Main" component={MainTabs} />
             <RootStack.Screen
               name="ServerDetail"
-              component={ServerDetailScreen}
+              component={safe(ServerDetailScreen)}
               options={{ animation: "slide_from_right" }}
             />
             <RootStack.Screen
               name="ServerMetrics"
-              component={ServerMetricsScreen}
+              component={safe(ServerMetricsScreen)}
               options={{ animation: "slide_from_right" }}
             />
             <RootStack.Screen
               name="VncConsole"
-              component={VncConsoleScreen}
+              component={safe(VncConsoleScreen)}
               options={{
                 animation: "slide_from_bottom",
                 presentation: "fullScreenModal",
@@ -178,7 +189,7 @@ export default function Navigation() {
             />
             <RootStack.Screen
               name="CreateServer"
-              component={CreateServerScreen}
+              component={safe(CreateServerScreen)}
               options={{
                 animation: "slide_from_bottom",
                 presentation: "modal",
@@ -186,7 +197,7 @@ export default function Navigation() {
             />
             <RootStack.Screen
               name="Settings"
-              component={SettingsScreen}
+              component={safe(SettingsScreen)}
               options={{
                 animation: "slide_from_bottom",
                 presentation: "modal",
@@ -194,12 +205,12 @@ export default function Navigation() {
             />
             <RootStack.Screen
               name="PrimaryIpList"
-              component={PrimaryIpListScreen}
+              component={safe(PrimaryIpListScreen)}
               options={{ animation: "slide_from_right" }}
             />
             <RootStack.Screen
               name="PricingCalculator"
-              component={PricingCalculatorScreen}
+              component={safe(PricingCalculatorScreen)}
               options={{ animation: "slide_from_right" }}
             />
           </>

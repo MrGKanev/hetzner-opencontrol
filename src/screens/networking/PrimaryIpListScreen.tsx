@@ -51,7 +51,7 @@ export default function PrimaryIpListScreen() {
     setSheetVisible,
     refresh,
     openSheet,
-  } = useResourceList(getPrimaryIPs);
+  } = useResourceList(["primary-ips"], getPrimaryIPs);
 
   const getActions = (ip: PrimaryIP) =>
     ip.assignee_id !== null ? assignedActions : freeActions;

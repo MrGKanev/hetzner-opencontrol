@@ -44,7 +44,7 @@ export default function NetworkListScreen() {
     setSheetVisible,
     refresh,
     openSheet,
-  } = useResourceList(getNetworks);
+  } = useResourceList(["networks"], getNetworks);
 
   const handleAction = (index: number, net: Network) => {
     switch (index) {

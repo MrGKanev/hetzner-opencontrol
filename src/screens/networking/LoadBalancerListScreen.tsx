@@ -44,7 +44,7 @@ export default function LoadBalancerListScreen() {
     setSheetVisible,
     refresh,
     openSheet,
-  } = useResourceList(getLoadBalancers);
+  } = useResourceList(["load-balancers"], getLoadBalancers);
 
   const handleAction = (index: number, lb: LoadBalancer) => {
     switch (index) {

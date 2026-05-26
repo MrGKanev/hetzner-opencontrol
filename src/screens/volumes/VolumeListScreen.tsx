@@ -42,7 +42,7 @@ export default function VolumeListScreen() {
     refresh,
     load,
     openSheet,
-  } = useResourceList(getVolumes);
+  } = useResourceList(["volumes"], getVolumes);
 
   const getActions = (volume: Volume) =>
     volume.server !== null ? attachedActions : freeActions;

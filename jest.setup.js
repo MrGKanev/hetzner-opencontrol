@@ -54,9 +54,41 @@ jest.mock('@notifee/react-native', () => ({
   EventType: { PRESS: 1, DISMISSED: 2 },
 }));
 
-jest.mock('@react-native-async-storage/async-storage', () =>
-  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
-);
+jest.mock('@react-native-async-storage/async-storage', () => {
+  const store: Record<string, string> = {};
+  return {
+    setItem: jest.fn((key, value) => {
+      store[key] = value;
+      return Promise.resolve();
+    }),
+    getItem: jest.fn((key) => Promise.resolve(store[key] ?? null)),
+    removeItem: jest.fn((key) => {
+      delete store[key];
+      return Promise.resolve();
+    }),
+    clear: jest.fn(() => {
+      Object.keys(store).forEach((k) => delete store[k]);
+      return Promise.resolve();
+    }),
+    getAllKeys: jest.fn(() => Promise.resolve(Object.keys(store))),
+    multiGet: jest.fn((keys) =>
+      Promise.resolve(keys.map((k) => [k, store[k] ?? null])),
+    ),
+    multiSet: jest.fn((pairs) => {
+      pairs.forEach(([k, v]) => (store[k] = v));
+      return Promise.resolve();
+    }),
+    multiRemove: jest.fn((keys) => {
+      keys.forEach((k) => delete store[k]);
+      return Promise.resolve();
+    }),
+    mergeItem: jest.fn((key, value) => {
+      store[key] = value;
+      return Promise.resolve();
+    }),
+    flushGetRequests: jest.fn(),
+  };
+});
 
 jest.mock('@react-native-community/netinfo', () => ({
   addEventListener: jest.fn(() => () => {}),

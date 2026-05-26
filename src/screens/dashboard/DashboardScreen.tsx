@@ -13,7 +13,9 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useServerStore } from "../../store/serverStore";
+import { useServersQuery, invalidateServers } from "../../hooks/useServersQuery";
+import { queryClient } from "../../api/queryClient";
+import { SERVERS_KEY } from "../../hooks/useServersQuery";
 import { getLocations } from "../../api/locations";
 import {
   getPrimaryIPs,
@@ -47,7 +49,7 @@ interface ResourceCounts {
 
 export default function DashboardScreen() {
   const navigation = useNavigation<Nav>();
-  const { servers, fetchServers, refreshServers, isLoading } = useServerStore();
+  const { data: servers = [], isLoading } = useServersQuery();
   const [counts, setCounts] = useState<ResourceCounts | null>(null);
   const [mapMarkers, setMapMarkers] = useState<MapMarker[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -55,7 +57,7 @@ export default function DashboardScreen() {
   const styles = makeStyles(colors);
 
   const loadData = useCallback(async () => {
-    await fetchServers();
+    await invalidateServers();
     try {
       const [locs, lbs, primaryIPs, floatingIPs, volumes, firewalls, networks] =
         await Promise.all([
@@ -68,8 +70,7 @@ export default function DashboardScreen() {
           getNetworks(),
         ]);
 
-      // Read fresh servers from store after fetch completes (avoid stale closure)
-      const freshServers = useServerStore.getState().servers;
+      const freshServers = queryClient.getQueryData<typeof servers>(SERVERS_KEY) ?? servers;
       const activeLocationNames = new Set(
         freshServers.map((s) => s.datacenter.location.name),
       );
@@ -93,7 +94,7 @@ export default function DashboardScreen() {
         networks: networks.length,
       });
     } catch {}
-  }, [fetchServers, servers]);
+  }, [servers]);
 
   useEffect(() => {
     loadData();
@@ -101,7 +102,6 @@ export default function DashboardScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await refreshServers();
     await loadData();
     setRefreshing(false);
   };

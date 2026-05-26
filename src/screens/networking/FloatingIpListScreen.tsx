@@ -51,7 +51,7 @@ export default function FloatingIpListScreen() {
     setSheetVisible,
     refresh,
     openSheet,
-  } = useResourceList(getFloatingIps);
+  } = useResourceList(["floating-ips"], getFloatingIps);
 
   const getActions = (ip: FloatingIP) =>
     ip.server !== null ? assignedActions : freeActions;

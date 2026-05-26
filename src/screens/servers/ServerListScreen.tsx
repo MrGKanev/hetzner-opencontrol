@@ -16,7 +16,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 
-import { useServerStore } from "../../store/serverStore";
+import { useServersQuery, invalidateServers } from "../../hooks/useServersQuery";
 import { useFavoritesStore } from "../../store/favoritesStore";
 import {
   powerOnServer,
@@ -62,7 +62,8 @@ const offActions = (fav: boolean) => [
 
 export default function ServerListScreen() {
   const navigation = useNavigation<Nav>();
-  const { servers, fetchServers, refreshServers, isLoading } = useServerStore();
+  const { data: servers = [], isLoading, isRefetching, refetch } = useServersQuery();
+  const refreshServers = invalidateServers;
   const {
     serverIds: favoriteIds,
     toggle: toggleFavorite,
@@ -95,9 +96,6 @@ export default function ServerListScreen() {
     });
   }, [servers, query, favoriteIds]);
 
-  useEffect(() => {
-    fetchServers();
-  }, []);
 
   const getActions = (server: Server) =>
     server.status === "running"
@@ -247,7 +245,7 @@ export default function ServerListScreen() {
           keyExtractor={(s) => String(s.id)}
           refreshControl={
             <RefreshControl
-              refreshing={isLoading}
+              refreshing={isRefetching && !isLoading}
               onRefresh={refreshServers}
               tintColor={colors.primary}
             />
