@@ -1,10 +1,10 @@
-import { useEffect, useRef } from 'react';
-import { AppState } from 'react-native';
-import { useSettingsStore } from '../store/settingsStore';
-import { useServerStore } from '../store/serverStore';
-import { useAuthStore } from '../store/authStore';
-import { sendServerStatusNotification } from './notifications';
-import { getServers } from '../api/servers';
+import { useEffect, useRef } from "react";
+import { AppState } from "react-native";
+import { useSettingsStore } from "../store/settingsStore";
+import { useServerStore } from "../store/serverStore";
+import { useAuthStore } from "../store/authStore";
+import { sendServerStatusNotification } from "./notifications";
+import { getServers } from "../api/servers";
 
 /**
  * Hook that drives background polling and server-status-change notifications.
@@ -30,7 +30,7 @@ export function useServerPoller() {
       if (!isAuthenticated) return;
 
       // Only poll when app is active
-      if (AppState.currentState !== 'active') return;
+      if (AppState.currentState !== "active") return;
 
       try {
         const servers = await getServers();
@@ -42,13 +42,19 @@ export function useServerPoller() {
           for (const server of servers) {
             const oldStatus = prev[server.id];
             if (oldStatus && oldStatus !== server.status) {
-              sendServerStatusNotification(server.name, oldStatus, server.status);
+              sendServerStatusNotification(
+                server.name,
+                oldStatus,
+                server.status,
+              );
             }
           }
         }
 
         // Update prev map and store
-        prevStatusRef.current = Object.fromEntries(servers.map(s => [s.id, s.status]));
+        prevStatusRef.current = Object.fromEntries(
+          servers.map((s) => [s.id, s.status]),
+        );
         useServerStore.setState({ servers, lastFetched: Date.now() });
       } catch {
         // Silently ignore polling errors
@@ -59,7 +65,9 @@ export function useServerPoller() {
   useEffect(() => {
     // Seed prev statuses from already-loaded servers
     const servers = useServerStore.getState().servers;
-    prevStatusRef.current = Object.fromEntries(servers.map(s => [s.id, s.status]));
+    prevStatusRef.current = Object.fromEntries(
+      servers.map((s) => [s.id, s.status]),
+    );
 
     // Start poller at current setting
     startPoller(useSettingsStore.getState().refreshInterval);

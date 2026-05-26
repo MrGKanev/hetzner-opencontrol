@@ -1,13 +1,22 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import React from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
-import { Spacing, BorderRadius, Typography } from '../../theme';
-import type { ThemeColors } from '../../theme';
-import { useColors } from '../../store/themeStore';
-import type { ServersStackParamList, RootStackParamList } from '../../navigation';
+import { Spacing, BorderRadius, Typography } from "../../theme";
+import type { ThemeColors } from "../../theme";
+import { useColors } from "../../store/themeStore";
+import type {
+  ServersStackParamList,
+  RootStackParamList,
+} from "../../navigation";
 
 type ServersNav = NativeStackNavigationProp<ServersStackParamList>;
 type RootNav = NativeStackNavigationProp<RootStackParamList>;
@@ -25,13 +34,37 @@ export default function ServersMenuScreen() {
   const styles = makeStyles(colors);
 
   const items: MenuItem[] = [
-    { label: 'All Servers', icon: '🖥', onPress: () => navigation.navigate('ServerList') },
-    { label: 'SSH Keys', icon: '🔑', onPress: () => navigation.navigate('SshKeyList') },
-    { label: 'Snapshots & Backups', icon: '📷', onPress: () => navigation.navigate('Images') },
-    { label: 'Activities', icon: '⚡️', onPress: () => {} },
-    { label: 'Placement Groups', icon: '⊞', onPress: () => navigation.navigate('PlacementGroupList') },
-    { label: 'Primary IPs', icon: '🌐', onPress: () => rootNavigation.navigate('PrimaryIpList') },
-    { label: 'Pricing Calculator', icon: '💰', onPress: () => rootNavigation.navigate('PricingCalculator') },
+    {
+      label: "All Servers",
+      icon: "🖥",
+      onPress: () => navigation.navigate("ServerList"),
+    },
+    {
+      label: "SSH Keys",
+      icon: "🔑",
+      onPress: () => navigation.navigate("SshKeyList"),
+    },
+    {
+      label: "Snapshots & Backups",
+      icon: "📷",
+      onPress: () => navigation.navigate("Images"),
+    },
+    { label: "Activities", icon: "⚡️", onPress: () => {} },
+    {
+      label: "Placement Groups",
+      icon: "⊞",
+      onPress: () => navigation.navigate("PlacementGroupList"),
+    },
+    {
+      label: "Primary IPs",
+      icon: "🌐",
+      onPress: () => rootNavigation.navigate("PrimaryIpList"),
+    },
+    {
+      label: "Pricing Calculator",
+      icon: "💰",
+      onPress: () => rootNavigation.navigate("PricingCalculator"),
+    },
   ];
 
   return (
@@ -58,22 +91,29 @@ export default function ServersMenuScreen() {
   );
 }
 
-const makeStyles = (c: ThemeColors) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: c.background },
-  header: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md },
-  title: { ...Typography.h1, color: c.textPrimary },
-  sectionLabel: { ...Typography.label, color: c.textSecondary, paddingHorizontal: Spacing.lg, marginTop: Spacing.md, marginBottom: Spacing.sm },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: c.card,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md + 2,
-    borderBottomWidth: 1,
-    borderBottomColor: c.cardBorder,
-  },
-  rowLast: { borderBottomWidth: 0 },
-  rowIcon: { fontSize: 18, width: 32 },
-  rowLabel: { ...Typography.body, color: c.textPrimary, flex: 1 },
-  rowChevron: { color: c.textMuted, fontSize: 22, fontWeight: '300' },
-});
+const makeStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: c.background },
+    header: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md },
+    title: { ...Typography.h1, color: c.textPrimary },
+    sectionLabel: {
+      ...Typography.label,
+      color: c.textSecondary,
+      paddingHorizontal: Spacing.lg,
+      marginTop: Spacing.md,
+      marginBottom: Spacing.sm,
+    },
+    row: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: c.card,
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md + 2,
+      borderBottomWidth: 1,
+      borderBottomColor: c.cardBorder,
+    },
+    rowLast: { borderBottomWidth: 0 },
+    rowIcon: { fontSize: 18, width: 32 },
+    rowLabel: { ...Typography.body, color: c.textPrimary, flex: 1 },
+    rowChevron: { color: c.textMuted, fontSize: 22, fontWeight: "300" },
+  });

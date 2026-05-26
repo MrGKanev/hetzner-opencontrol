@@ -1,10 +1,20 @@
-import { getApiClient } from './client';
-import type { Firewall, FirewallRule, Network, PrimaryIP, LoadBalancer, Certificate, Action } from '../models';
+import { getApiClient } from "./client";
+import type {
+  Firewall,
+  FirewallRule,
+  Network,
+  PrimaryIP,
+  LoadBalancer,
+  Certificate,
+  Action,
+} from "../models";
 
 // ─── Firewalls ────────────────────────────────────────────────────────────────
 
 export async function getFirewalls(): Promise<Firewall[]> {
-  const res = await getApiClient().get('/firewalls', { params: { per_page: 100 } });
+  const res = await getApiClient().get("/firewalls", {
+    params: { per_page: 100 },
+  });
   return res.data.firewalls;
 }
 
@@ -13,13 +23,21 @@ export async function getFirewall(id: number): Promise<Firewall> {
   return res.data.firewall;
 }
 
-export async function createFirewall(name: string, rules?: FirewallRule[]): Promise<{ firewall: Firewall; actions: Action[] }> {
-  const res = await getApiClient().post('/firewalls', { name, rules });
+export async function createFirewall(
+  name: string,
+  rules?: FirewallRule[],
+): Promise<{ firewall: Firewall; actions: Action[] }> {
+  const res = await getApiClient().post("/firewalls", { name, rules });
   return res.data;
 }
 
-export async function updateFirewallRules(id: number, rules: FirewallRule[]): Promise<Action[]> {
-  const res = await getApiClient().post(`/firewalls/${id}/actions/set_rules`, { rules });
+export async function updateFirewallRules(
+  id: number,
+  rules: FirewallRule[],
+): Promise<Action[]> {
+  const res = await getApiClient().post(`/firewalls/${id}/actions/set_rules`, {
+    rules,
+  });
   return res.data.actions;
 }
 
@@ -30,7 +48,9 @@ export async function deleteFirewall(id: number): Promise<void> {
 // ─── Networks ─────────────────────────────────────────────────────────────────
 
 export async function getNetworks(): Promise<Network[]> {
-  const res = await getApiClient().get('/networks', { params: { per_page: 100 } });
+  const res = await getApiClient().get("/networks", {
+    params: { per_page: 100 },
+  });
   return res.data.networks;
 }
 
@@ -39,8 +59,12 @@ export async function getNetwork(id: number): Promise<Network> {
   return res.data.network;
 }
 
-export async function createNetwork(params: { name: string; ip_range: string; subnets?: Array<{ type: string; ip_range: string; network_zone: string }> }): Promise<Network> {
-  const res = await getApiClient().post('/networks', params);
+export async function createNetwork(params: {
+  name: string;
+  ip_range: string;
+  subnets?: Array<{ type: string; ip_range: string; network_zone: string }>;
+}): Promise<Network> {
+  const res = await getApiClient().post("/networks", params);
   return res.data.network;
 }
 
@@ -51,7 +75,9 @@ export async function deleteNetwork(id: number): Promise<void> {
 // ─── Primary IPs ─────────────────────────────────────────────────────────────
 
 export async function getPrimaryIPs(): Promise<PrimaryIP[]> {
-  const res = await getApiClient().get('/primary_ips', { params: { per_page: 100 } });
+  const res = await getApiClient().get("/primary_ips", {
+    params: { per_page: 100 },
+  });
   return res.data.primary_ips;
 }
 
@@ -67,7 +93,9 @@ export async function unassignPrimaryIP(id: number): Promise<Action> {
 // ─── Load Balancers ───────────────────────────────────────────────────────────
 
 export async function getLoadBalancers(): Promise<LoadBalancer[]> {
-  const res = await getApiClient().get('/load_balancers', { params: { per_page: 100 } });
+  const res = await getApiClient().get("/load_balancers", {
+    params: { per_page: 100 },
+  });
   return res.data.load_balancers;
 }
 
@@ -83,7 +111,9 @@ export async function deleteLoadBalancer(id: number): Promise<void> {
 // ─── Certificates ─────────────────────────────────────────────────────────────
 
 export async function getCertificates(): Promise<Certificate[]> {
-  const res = await getApiClient().get('/certificates', { params: { per_page: 100 } });
+  const res = await getApiClient().get("/certificates", {
+    params: { per_page: 100 },
+  });
   return res.data.certificates;
 }
 

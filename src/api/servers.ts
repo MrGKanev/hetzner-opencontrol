@@ -1,5 +1,13 @@
-import { getApiClient } from './client';
-import type { Server, ServerMetrics, Action, Image, Iso, ServerType, PlacementGroup } from '../models';
+import { getApiClient } from "./client";
+import type {
+  Server,
+  ServerMetrics,
+  Action,
+  Image,
+  Iso,
+  ServerType,
+  PlacementGroup,
+} from "../models";
 
 // ─── List ────────────────────────────────────────────────────────────────────
 
@@ -7,7 +15,9 @@ export async function getServers(): Promise<Server[]> {
   const all: Server[] = [];
   let page = 1;
   while (true) {
-    const res = await getApiClient().get('/servers', { params: { page, per_page: 50 } });
+    const res = await getApiClient().get("/servers", {
+      params: { page, per_page: 50 },
+    });
     all.push(...res.data.servers);
     if (!res.data.meta.pagination.next_page) break;
     page++;
@@ -47,18 +57,29 @@ export async function shutdownServer(id: number): Promise<Action> {
   return res.data.action;
 }
 
-export async function enableRescueMode(id: number, type: 'linux64' | 'freebsd64', ssh_keys?: number[]): Promise<{ action: Action; root_password: string }> {
-  const res = await getApiClient().post(`/servers/${id}/actions/enable_rescue`, { type, ssh_keys });
+export async function enableRescueMode(
+  id: number,
+  type: "linux64" | "freebsd64",
+  ssh_keys?: number[],
+): Promise<{ action: Action; root_password: string }> {
+  const res = await getApiClient().post(
+    `/servers/${id}/actions/enable_rescue`,
+    { type, ssh_keys },
+  );
   return res.data;
 }
 
 export async function disableRescueMode(id: number): Promise<Action> {
-  const res = await getApiClient().post(`/servers/${id}/actions/disable_rescue`);
+  const res = await getApiClient().post(
+    `/servers/${id}/actions/disable_rescue`,
+  );
   return res.data.action;
 }
 
 export async function attachIso(id: number, iso_id: number): Promise<Action> {
-  const res = await getApiClient().post(`/servers/${id}/actions/attach_iso`, { iso: iso_id });
+  const res = await getApiClient().post(`/servers/${id}/actions/attach_iso`, {
+    iso: iso_id,
+  });
   return res.data.action;
 }
 
@@ -67,17 +88,32 @@ export async function detachIso(id: number): Promise<Action> {
   return res.data.action;
 }
 
-export async function rebuildServer(id: number, image: number | string): Promise<{ action: Action; root_password: string | null }> {
-  const res = await getApiClient().post(`/servers/${id}/actions/rebuild`, { image });
+export async function rebuildServer(
+  id: number,
+  image: number | string,
+): Promise<{ action: Action; root_password: string | null }> {
+  const res = await getApiClient().post(`/servers/${id}/actions/rebuild`, {
+    image,
+  });
   return res.data;
 }
 
-export async function changeServerType(id: number, server_type: string, upgrade_disk: boolean): Promise<Action> {
-  const res = await getApiClient().post(`/servers/${id}/actions/change_type`, { server_type, upgrade_disk });
+export async function changeServerType(
+  id: number,
+  server_type: string,
+  upgrade_disk: boolean,
+): Promise<Action> {
+  const res = await getApiClient().post(`/servers/${id}/actions/change_type`, {
+    server_type,
+    upgrade_disk,
+  });
   return res.data.action;
 }
 
-export async function updateServer(id: number, data: { name?: string; labels?: Record<string, string> }): Promise<Server> {
+export async function updateServer(
+  id: number,
+  data: { name?: string; labels?: Record<string, string> },
+): Promise<Server> {
   const res = await getApiClient().put(`/servers/${id}`, data);
   return res.data.server;
 }
@@ -94,7 +130,7 @@ export async function getServerActions(serverId: number): Promise<Action[]> {
   let page = 1;
   while (true) {
     const res = await getApiClient().get(`/servers/${serverId}/actions`, {
-      params: { page, per_page: 50, sort: 'id:desc' },
+      params: { page, per_page: 50, sort: "id:desc" },
     });
     all.push(...res.data.actions);
     if (!res.data.meta?.pagination?.next_page || all.length >= 100) break;
@@ -105,7 +141,7 @@ export async function getServerActions(serverId: number): Promise<Action[]> {
 
 // ─── Metrics ─────────────────────────────────────────────────────────────────
 
-export type MetricType = 'cpu' | 'disk' | 'network';
+export type MetricType = "cpu" | "disk" | "network";
 
 export async function getServerMetrics(
   id: number,
@@ -126,8 +162,12 @@ export async function getServerMetrics(
 
 // ─── Console ──────────────────────────────────────────────────────────────────
 
-export async function requestConsole(id: number): Promise<{ wss_url: string; password: string }> {
-  const res = await getApiClient().post(`/servers/${id}/actions/request_console`);
+export async function requestConsole(
+  id: number,
+): Promise<{ wss_url: string; password: string }> {
+  const res = await getApiClient().post(
+    `/servers/${id}/actions/request_console`,
+  );
   return res.data;
 }
 
@@ -149,15 +189,19 @@ export interface CreateServerParams {
   public_net?: { enable_ipv4: boolean; enable_ipv6: boolean };
 }
 
-export async function createServer(params: CreateServerParams): Promise<{ server: Server; action: Action; root_password: string | null }> {
-  const res = await getApiClient().post('/servers', params);
+export async function createServer(
+  params: CreateServerParams,
+): Promise<{ server: Server; action: Action; root_password: string | null }> {
+  const res = await getApiClient().post("/servers", params);
   return res.data;
 }
 
 // ─── Server Types ─────────────────────────────────────────────────────────────
 
 export async function getServerTypes(): Promise<ServerType[]> {
-  const res = await getApiClient().get('/server_types', { params: { per_page: 100 } });
+  const res = await getApiClient().get("/server_types", {
+    params: { per_page: 100 },
+  });
   return res.data.server_types;
 }
 
@@ -167,8 +211,14 @@ export async function getImages(type?: string): Promise<Image[]> {
   const all: Image[] = [];
   let page = 1;
   while (true) {
-    const res = await getApiClient().get('/images', {
-      params: { page, per_page: 50, type, architecture: 'x86', status: 'available' },
+    const res = await getApiClient().get("/images", {
+      params: {
+        page,
+        per_page: 50,
+        type,
+        architecture: "x86",
+        status: "available",
+      },
     });
     all.push(...res.data.images);
     if (!res.data.meta.pagination.next_page) break;
@@ -180,14 +230,18 @@ export async function getImages(type?: string): Promise<Image[]> {
 // ─── ISOs ─────────────────────────────────────────────────────────────────────
 
 export async function getIsos(): Promise<Iso[]> {
-  const res = await getApiClient().get('/isos', { params: { per_page: 100, type: 'public' } });
+  const res = await getApiClient().get("/isos", {
+    params: { per_page: 100, type: "public" },
+  });
   return res.data.isos;
 }
 
 // ─── Placement Groups ─────────────────────────────────────────────────────────
 
 export async function getPlacementGroups(): Promise<PlacementGroup[]> {
-  const res = await getApiClient().get('/placement_groups', { params: { per_page: 100 } });
+  const res = await getApiClient().get("/placement_groups", {
+    params: { per_page: 100 },
+  });
   return res.data.placement_groups;
 }
 

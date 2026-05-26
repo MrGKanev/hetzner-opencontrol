@@ -6,22 +6,22 @@
  * Run: node scripts/build-novnc.js
  */
 
-const esbuild = require('esbuild');
-const fs = require('fs');
-const path = require('path');
+const esbuild = require("esbuild");
+const fs = require("fs");
+const path = require("path");
 
-const ENTRY = path.join(__dirname, 'novnc-entry.js');
-const OUT_TS = path.join(__dirname, '../src/assets/novncHtml.ts');
+const ENTRY = path.join(__dirname, "novnc-entry.js");
+const OUT_TS = path.join(__dirname, "../src/assets/novncHtml.ts");
 
 async function main() {
   const result = await esbuild.build({
     entryPoints: [ENTRY],
     bundle: true,
-    format: 'esm',
+    format: "esm",
     minify: true,
     write: false,
-    platform: 'browser',
-    target: ['es2022'],
+    platform: "browser",
+    target: ["es2022"],
   });
 
   const bundleJs = result.outputFiles[0].text;
@@ -65,8 +65,13 @@ export function buildNovncHash(wssUrl: string, password: string): string {
 }
 `;
 
-  fs.writeFileSync(OUT_TS, tsContent, 'utf8');
-  console.log(`✓ noVNC bundle written to src/assets/novncHtml.ts (${(bundleJs.length / 1024).toFixed(0)} KB JS)`);
+  fs.writeFileSync(OUT_TS, tsContent, "utf8");
+  console.log(
+    `✓ noVNC bundle written to src/assets/novncHtml.ts (${(bundleJs.length / 1024).toFixed(0)} KB JS)`,
+  );
 }
 
-main().catch(e => { console.error(e); process.exit(1); });
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

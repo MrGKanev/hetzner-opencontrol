@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   View,
   Text,
@@ -9,66 +9,90 @@ import {
   ActivityIndicator,
   Alert,
   Clipboard,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 
-import { getFloatingIps, unassignFloatingIp, deleteFloatingIp } from '../../api/floatingIps';
-import type { FloatingIP } from '../../models';
-import { Spacing, BorderRadius, Typography } from '../../theme';
-import type { ThemeColors } from '../../theme';
-import { useColors } from '../../store/themeStore';
-import { ActionSheetModal } from '../../components/common/ActionSheet';
-import { useResourceList } from '../../hooks/useResourceList';
-import { confirmDelete } from '../../utils/dialogs';
+import {
+  getFloatingIps,
+  unassignFloatingIp,
+  deleteFloatingIp,
+} from "../../api/floatingIps";
+import type { FloatingIP } from "../../models";
+import { Spacing, BorderRadius, Typography } from "../../theme";
+import type { ThemeColors } from "../../theme";
+import { useColors } from "../../store/themeStore";
+import { ActionSheetModal } from "../../components/common/ActionSheet";
+import { useResourceList } from "../../hooks/useResourceList";
+import { confirmDelete } from "../../utils/dialogs";
 
 const assignedActions = [
-  { label: 'Copy IP', icon: '📋' },
-  { label: 'Unassign', icon: '⏏️' },
-  { label: 'Delete', icon: '🗑', destructive: true },
+  { label: "Copy IP", icon: "📋" },
+  { label: "Unassign", icon: "⏏️" },
+  { label: "Delete", icon: "🗑", destructive: true },
 ];
 
 const freeActions = [
-  { label: 'Copy IP', icon: '📋' },
-  { label: 'Delete', icon: '🗑', destructive: true },
+  { label: "Copy IP", icon: "📋" },
+  { label: "Delete", icon: "🗑", destructive: true },
 ];
 
 export default function FloatingIpListScreen() {
   const colors = useColors();
   const styles = makeStyles(colors);
 
-  const { data: ips, setData: setIps, loading, refreshing, selected, sheetVisible, setSheetVisible, refresh, openSheet } =
-    useResourceList(getFloatingIps);
+  const {
+    data: ips,
+    setData: setIps,
+    loading,
+    refreshing,
+    selected,
+    sheetVisible,
+    setSheetVisible,
+    refresh,
+    openSheet,
+  } = useResourceList(getFloatingIps);
 
-  const getActions = (ip: FloatingIP) => ip.server !== null ? assignedActions : freeActions;
+  const getActions = (ip: FloatingIP) =>
+    ip.server !== null ? assignedActions : freeActions;
 
-  const handleAction = async (index: number, actions: typeof assignedActions, ip: FloatingIP) => {
+  const handleAction = async (
+    index: number,
+    actions: typeof assignedActions,
+    ip: FloatingIP,
+  ) => {
     const label = actions[index].label;
     switch (label) {
-      case 'Copy IP':
+      case "Copy IP":
         Clipboard.setString(ip.ip);
-        Alert.alert('Copied', `${ip.ip} copied to clipboard`);
+        Alert.alert("Copied", `${ip.ip} copied to clipboard`);
         break;
 
-      case 'Unassign':
-        Alert.alert('Unassign IP', `Unassign ${ip.ip} from server?`, [
-          { text: 'Cancel', style: 'cancel' },
+      case "Unassign":
+        Alert.alert("Unassign IP", `Unassign ${ip.ip} from server?`, [
+          { text: "Cancel", style: "cancel" },
           {
-            text: 'Unassign',
+            text: "Unassign",
             onPress: async () => {
               try {
                 await unassignFloatingIp(ip.id);
-                setIps(prev => prev.map(i => i.id === ip.id ? { ...i, server: null } : i));
-              } catch (e: any) { Alert.alert('Error', e.message); }
+                setIps((prev) =>
+                  prev.map((i) =>
+                    i.id === ip.id ? { ...i, server: null } : i,
+                  ),
+                );
+              } catch (e: any) {
+                Alert.alert("Error", e.message);
+              }
             },
           },
         ]);
         break;
 
-      case 'Delete':
+      case "Delete":
         confirmDelete(ip.name || ip.ip, async () => {
           await deleteFloatingIp(ip.id);
-          setIps(prev => prev.filter(i => i.id !== ip.id));
+          setIps((prev) => prev.filter((i) => i.id !== ip.id));
         });
         break;
     }
@@ -80,13 +104,17 @@ export default function FloatingIpListScreen() {
     return (
       <TouchableOpacity
         style={styles.card}
-        onPress={() => openSheet(item, item.name || item.ip, actions, i => handleAction(i, actions, item))}
+        onPress={() =>
+          openSheet(item, item.name || item.ip, actions, (i) =>
+            handleAction(i, actions, item),
+          )
+        }
         activeOpacity={0.75}
       >
         <View style={styles.cardLeft}>
           <View style={styles.iconWrap}>
             <Icon
-              name={item.type === 'ipv6' ? 'ip-network-outline' : 'ip'}
+              name={item.type === "ipv6" ? "ip-network-outline" : "ip"}
               size={18}
               color={colors.primary}
             />
@@ -95,14 +123,24 @@ export default function FloatingIpListScreen() {
             {item.name ? <Text style={styles.name}>{item.name}</Text> : null}
             <Text style={styles.ip}>{item.ip}</Text>
             <Text style={styles.meta}>
-              {item.type.toUpperCase()}  ·  {item.home_location.name}
-              {item.description ? `  ·  ${item.description}` : ''}
+              {item.type.toUpperCase()} · {item.home_location.name}
+              {item.description ? `  ·  ${item.description}` : ""}
             </Text>
           </View>
         </View>
-        <View style={[styles.badge, isAssigned ? styles.badgeAssigned : styles.badgeFree]}>
-          <Text style={[styles.badgeText, { color: isAssigned ? colors.primary : colors.textMuted }]}>
-            {isAssigned ? 'Assigned' : 'Unassigned'}
+        <View
+          style={[
+            styles.badge,
+            isAssigned ? styles.badgeAssigned : styles.badgeFree,
+          ]}
+        >
+          <Text
+            style={[
+              styles.badgeText,
+              { color: isAssigned ? colors.primary : colors.textMuted },
+            ]}
+          >
+            {isAssigned ? "Assigned" : "Unassigned"}
           </Text>
         </View>
       </TouchableOpacity>
@@ -122,16 +160,24 @@ export default function FloatingIpListScreen() {
       ) : (
         <FlatList
           data={ips}
-          keyExtractor={i => String(i.id)}
+          keyExtractor={(i) => String(i.id)}
           renderItem={renderItem}
           contentContainerStyle={styles.list}
           ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.primary} />
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={refresh}
+              tintColor={colors.primary}
+            />
           }
           ListEmptyComponent={
             <View style={styles.center}>
-              <Icon name="ip-network-outline" size={48} color={colors.textMuted} />
+              <Icon
+                name="ip-network-outline"
+                size={48}
+                color={colors.textMuted}
+              />
               <Text style={styles.emptyText}>No Floating IPs</Text>
             </View>
           }
@@ -140,52 +186,67 @@ export default function FloatingIpListScreen() {
 
       <ActionSheetModal
         visible={sheetVisible}
-        title={selected ? (selected.name || selected.ip) : undefined}
+        title={selected ? selected.name || selected.ip : undefined}
         options={selected ? getActions(selected) : []}
-        onSelect={i => { if (selected) handleAction(i, getActions(selected), selected); }}
+        onSelect={(i) => {
+          if (selected) handleAction(i, getActions(selected), selected);
+        }}
         onCancel={() => setSheetVisible(false)}
       />
     </SafeAreaView>
   );
 }
 
-const makeStyles = (c: ThemeColors) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: c.background },
-  header: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md },
-  title: { ...Typography.h1, color: c.textPrimary },
-  list: { paddingHorizontal: Spacing.lg, paddingBottom: Spacing.lg },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.xl, gap: Spacing.md, marginTop: 40 },
-  emptyText: { ...Typography.body, color: c.textSecondary },
-  card: {
-    backgroundColor: c.card,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: c.cardBorder,
-    padding: Spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  cardLeft: { flex: 1, flexDirection: 'row', alignItems: 'flex-start' },
-  iconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: BorderRadius.sm,
-    backgroundColor: c.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: Spacing.sm,
-  },
-  info: { flex: 1 },
-  name: { ...Typography.body, color: c.textPrimary, fontWeight: '600' },
-  ip: { ...Typography.body, color: c.textPrimary, fontFamily: 'monospace', fontWeight: '500' },
-  meta: { ...Typography.caption, color: c.textMuted, marginTop: 2 },
-  badge: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 3,
-    borderRadius: BorderRadius.full,
-    marginLeft: Spacing.sm,
-  },
-  badgeAssigned: { backgroundColor: c.primary + '22' },
-  badgeFree: { backgroundColor: c.surface },
-  badgeText: { fontSize: 11, fontWeight: '600' },
-});
+const makeStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: c.background },
+    header: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md },
+    title: { ...Typography.h1, color: c.textPrimary },
+    list: { paddingHorizontal: Spacing.lg, paddingBottom: Spacing.lg },
+    center: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      padding: Spacing.xl,
+      gap: Spacing.md,
+      marginTop: 40,
+    },
+    emptyText: { ...Typography.body, color: c.textSecondary },
+    card: {
+      backgroundColor: c.card,
+      borderRadius: BorderRadius.md,
+      borderWidth: 1,
+      borderColor: c.cardBorder,
+      padding: Spacing.md,
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    cardLeft: { flex: 1, flexDirection: "row", alignItems: "flex-start" },
+    iconWrap: {
+      width: 36,
+      height: 36,
+      borderRadius: BorderRadius.sm,
+      backgroundColor: c.surface,
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: Spacing.sm,
+    },
+    info: { flex: 1 },
+    name: { ...Typography.body, color: c.textPrimary, fontWeight: "600" },
+    ip: {
+      ...Typography.body,
+      color: c.textPrimary,
+      fontFamily: "monospace",
+      fontWeight: "500",
+    },
+    meta: { ...Typography.caption, color: c.textMuted, marginTop: 2 },
+    badge: {
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: 3,
+      borderRadius: BorderRadius.full,
+      marginLeft: Spacing.sm,
+    },
+    badgeAssigned: { backgroundColor: c.primary + "22" },
+    badgeFree: { backgroundColor: c.surface },
+    badgeText: { fontSize: 11, fontWeight: "600" },
+  });

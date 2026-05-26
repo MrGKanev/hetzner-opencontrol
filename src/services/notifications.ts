@@ -1,11 +1,11 @@
-import notifee, { AndroidImportance } from '@notifee/react-native';
+import notifee, { AndroidImportance } from "@notifee/react-native";
 
-const CHANNEL_ID = 'server-status';
+const CHANNEL_ID = "server-status";
 
 async function ensureChannel() {
   await notifee.createChannel({
     id: CHANNEL_ID,
-    name: 'Server Status',
+    name: "Server Status",
     importance: AndroidImportance.HIGH,
   });
 }
@@ -15,15 +15,19 @@ export async function requestNotificationPermission(): Promise<boolean> {
   return settings.authorizationStatus >= 1;
 }
 
-export async function sendServerStatusNotification(serverName: string, oldStatus: string, newStatus: string) {
+export async function sendServerStatusNotification(
+  serverName: string,
+  oldStatus: string,
+  newStatus: string,
+) {
   await ensureChannel();
   await notifee.displayNotification({
     title: `Server: ${serverName}`,
     body: `Status changed: ${capitalise(oldStatus)} → ${capitalise(newStatus)}`,
     android: {
       channelId: CHANNEL_ID,
-      smallIcon: 'ic_notification',
-      pressAction: { id: 'default' },
+      smallIcon: "ic_notification",
+      pressAction: { id: "default" },
     },
   });
 }

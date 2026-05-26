@@ -1,5 +1,5 @@
-import React from 'react';
-import Svg, { Path } from 'react-native-svg';
+import React from "react";
+import Svg, { Path } from "react-native-svg";
 
 interface Props {
   size?: number;
@@ -11,7 +11,7 @@ interface Props {
  * Source: https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/hetzner.svg
  * ViewBox 0 0 24 24 - square border + H letterform, fill-rule evenodd.
  */
-export default function HetznerLogo({ size = 64, color = '#E2001A' }: Props) {
+export default function HetznerLogo({ size = 64, color = "#E2001A" }: Props) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24">
       <Path

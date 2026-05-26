@@ -1,14 +1,14 @@
-import { create } from 'zustand';
-import { Platform, NativeModules } from 'react-native';
-import * as serverApi from '../api/servers';
-import type { Server } from '../models';
+import { create } from "zustand";
+import { Platform, NativeModules } from "react-native";
+import * as serverApi from "../api/servers";
+import type { Server } from "../models";
 
 function syncWidget(servers: Server[]) {
-  if (Platform.OS !== 'android') return;
+  if (Platform.OS !== "android") return;
   const { WidgetData } = NativeModules;
   if (!WidgetData) return;
   const payload = JSON.stringify(
-    servers.map(s => ({ name: s.name, status: s.status }))
+    servers.map((s) => ({ name: s.name, status: s.status })),
   );
   WidgetData.updateServers(payload);
 }
@@ -58,14 +58,14 @@ export const useServerStore = create<ServerState>((set, get) => ({
   },
 
   updateServerInList: (server: Server) => {
-    set(state => ({
-      servers: state.servers.map(s => s.id === server.id ? server : s),
+    set((state) => ({
+      servers: state.servers.map((s) => (s.id === server.id ? server : s)),
     }));
   },
 
   removeServerFromList: (id: number) => {
-    set(state => ({
-      servers: state.servers.filter(s => s.id !== id),
+    set((state) => ({
+      servers: state.servers.filter((s) => s.id !== id),
     }));
   },
 }));

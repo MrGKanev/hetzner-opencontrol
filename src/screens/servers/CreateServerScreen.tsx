@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -8,25 +8,33 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 
-import type { RootStackParamList } from '../../navigation';
-import { getServerTypes, getImages, createServer } from '../../api/servers';
-import { getLocations } from '../../api/locations';
-import { useServerStore } from '../../store/serverStore';
-import { Spacing, BorderRadius, Typography } from '../../theme';
-import type { ThemeColors } from '../../theme';
-import { useColors } from '../../store/themeStore';
-import type { Location, ServerType, Image } from '../../models';
+import type { RootStackParamList } from "../../navigation";
+import { getServerTypes, getImages, createServer } from "../../api/servers";
+import { getLocations } from "../../api/locations";
+import { useServerStore } from "../../store/serverStore";
+import { Spacing, BorderRadius, Typography } from "../../theme";
+import type { ThemeColors } from "../../theme";
+import { useColors } from "../../store/themeStore";
+import type { Location, ServerType, Image } from "../../models";
 
-type Props = NativeStackScreenProps<RootStackParamList, 'CreateServer'>;
+type Props = NativeStackScreenProps<RootStackParamList, "CreateServer">;
 
-const OS_FLAVORS = ['ubuntu', 'debian', 'centos', 'alma', 'rocky', 'fedora', 'opensuse'];
+const OS_FLAVORS = [
+  "ubuntu",
+  "debian",
+  "centos",
+  "alma",
+  "rocky",
+  "fedora",
+  "opensuse",
+];
 
 export default function CreateServerScreen({ navigation }: Props) {
-  const [name, setName] = useState('');
+  const [name, setName] = useState("");
   const [locations, setLocations] = useState<Location[]>([]);
   const [serverTypes, setServerTypes] = useState<ServerType[]>([]);
   const [images, setImages] = useState<Image[]>([]);
@@ -43,19 +51,27 @@ export default function CreateServerScreen({ navigation }: Props) {
   const { refreshServers } = useServerStore();
 
   useEffect(() => {
-    Promise.all([getLocations(), getServerTypes(), getImages('system')]).then(([locs, types, imgs]) => {
-      setLocations(locs);
-      setServerTypes(types);
-      setImages(imgs.filter(i => OS_FLAVORS.includes(i.os_flavor)));
-      setSelectedLocation(locs[0]?.name ?? null);
-      setSelectedType(types[0]?.name ?? null);
-      setLoading(false);
-    });
+    Promise.all([getLocations(), getServerTypes(), getImages("system")]).then(
+      ([locs, types, imgs]) => {
+        setLocations(locs);
+        setServerTypes(types);
+        setImages(imgs.filter((i) => OS_FLAVORS.includes(i.os_flavor)));
+        setSelectedLocation(locs[0]?.name ?? null);
+        setSelectedType(types[0]?.name ?? null);
+        setLoading(false);
+      },
+    );
   }, []);
 
   const handleCreate = async () => {
-    if (!name.trim()) { Alert.alert('Error', 'Please enter a server name'); return; }
-    if (!selectedType || !selectedImage || !selectedLocation) { Alert.alert('Error', 'Please fill all required fields'); return; }
+    if (!name.trim()) {
+      Alert.alert("Error", "Please enter a server name");
+      return;
+    }
+    if (!selectedType || !selectedImage || !selectedLocation) {
+      Alert.alert("Error", "Please fill all required fields");
+      return;
+    }
 
     setCreating(true);
     try {
@@ -68,7 +84,7 @@ export default function CreateServerScreen({ navigation }: Props) {
       await refreshServers();
       navigation.goBack();
     } catch (e: any) {
-      Alert.alert('Error', e.message);
+      Alert.alert("Error", e.message);
     } finally {
       setCreating(false);
     }
@@ -83,10 +99,10 @@ export default function CreateServerScreen({ navigation }: Props) {
   }
 
   // Group images by OS flavor
-  const imagesByFlavor = OS_FLAVORS.map(flavor => ({
+  const imagesByFlavor = OS_FLAVORS.map((flavor) => ({
     flavor,
-    images: images.filter(i => i.os_flavor === flavor),
-  })).filter(g => g.images.length > 0);
+    images: images.filter((i) => i.os_flavor === flavor),
+  })).filter((g) => g.images.length > 0);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -96,10 +112,11 @@ export default function CreateServerScreen({ navigation }: Props) {
         </TouchableOpacity>
         <Text style={styles.title}>New Server</Text>
         <TouchableOpacity onPress={handleCreate} disabled={creating}>
-          {creating
-            ? <ActivityIndicator color={colors.primary} size="small" />
-            : <Text style={styles.createText}>Create</Text>
-          }
+          {creating ? (
+            <ActivityIndicator color={colors.primary} size="small" />
+          ) : (
+            <Text style={styles.createText}>Create</Text>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -122,10 +139,13 @@ export default function CreateServerScreen({ navigation }: Props) {
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>LOCATION</Text>
           <View style={styles.optionGrid}>
-            {locations.map(loc => (
+            {locations.map((loc) => (
               <TouchableOpacity
                 key={loc.id}
-                style={[styles.optionCard, selectedLocation === loc.name && styles.optionCardSelected]}
+                style={[
+                  styles.optionCard,
+                  selectedLocation === loc.name && styles.optionCardSelected,
+                ]}
                 onPress={() => setSelectedLocation(loc.name)}
               >
                 <Text style={styles.optionTitle}>{loc.city}</Text>
@@ -145,11 +165,16 @@ export default function CreateServerScreen({ navigation }: Props) {
               return (
                 <TouchableOpacity
                   key={flavor}
-                  style={[styles.optionCard, isSelected && styles.optionCardSelected]}
+                  style={[
+                    styles.optionCard,
+                    isSelected && styles.optionCardSelected,
+                  ]}
                   onPress={() => setSelectedImage(latestImage.id)}
                 >
                   <Text style={styles.optionTitle}>{capitalize(flavor)}</Text>
-                  <Text style={styles.optionSub}>{latestImage.os_version ?? ''}</Text>
+                  <Text style={styles.optionSub}>
+                    {latestImage.os_version ?? ""}
+                  </Text>
                 </TouchableOpacity>
               );
             })}
@@ -159,17 +184,24 @@ export default function CreateServerScreen({ navigation }: Props) {
         {/* Server Type */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>SERVER TYPE</Text>
-          {serverTypes.slice(0, 10).map(type => (
+          {serverTypes.slice(0, 10).map((type) => (
             <TouchableOpacity
               key={type.id}
-              style={[styles.typeRow, selectedType === type.name && styles.typeRowSelected]}
+              style={[
+                styles.typeRow,
+                selectedType === type.name && styles.typeRowSelected,
+              ]}
               onPress={() => setSelectedType(type.name)}
             >
               <View style={styles.typeInfo}>
                 <Text style={styles.typeName}>{type.name.toUpperCase()}</Text>
-                <Text style={styles.typeSpecs}>{type.cores} vCPU · {type.memory} GB RAM · {type.disk} GB Disk</Text>
+                <Text style={styles.typeSpecs}>
+                  {type.cores} vCPU · {type.memory} GB RAM · {type.disk} GB Disk
+                </Text>
               </View>
-              {selectedType === type.name && <Text style={styles.checkmark}>✓</Text>}
+              {selectedType === type.name && (
+                <Text style={styles.checkmark}>✓</Text>
+              )}
             </TouchableOpacity>
           ))}
         </View>
@@ -178,58 +210,73 @@ export default function CreateServerScreen({ navigation }: Props) {
   );
 }
 
-function capitalize(s: string) { return s.charAt(0).toUpperCase() + s.slice(1); }
+function capitalize(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
 
-const makeStyles = (c: ThemeColors) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: c.background },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: c.cardBorder,
-  },
-  cancelText: { color: c.primary, fontSize: 17 },
-  title: { ...Typography.h3, color: c.textPrimary },
-  createText: { color: c.textPrimary, fontSize: 17, fontWeight: '600' },
-  content: { padding: Spacing.lg, gap: Spacing.lg },
-  section: { gap: Spacing.sm },
-  sectionLabel: { ...Typography.label, color: c.textSecondary },
-  input: {
-    backgroundColor: c.card,
-    borderWidth: 1,
-    borderColor: c.cardBorder,
-    borderRadius: BorderRadius.md,
-    color: c.textPrimary,
-    padding: Spacing.md,
-    fontSize: 15,
-  },
-  optionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
-  optionCard: {
-    backgroundColor: c.card,
-    borderWidth: 1,
-    borderColor: c.cardBorder,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
-    minWidth: '47%',
-  },
-  optionCardSelected: { borderColor: c.primary },
-  optionTitle: { ...Typography.body, color: c.textPrimary, fontWeight: '600' },
-  optionSub: { ...Typography.bodySmall, color: c.textSecondary, marginTop: 2 },
-  typeRow: {
-    backgroundColor: c.card,
-    borderWidth: 1,
-    borderColor: c.cardBorder,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  typeRowSelected: { borderColor: c.primary },
-  typeInfo: { flex: 1 },
-  typeName: { ...Typography.body, color: c.textPrimary, fontWeight: '600' },
-  typeSpecs: { ...Typography.bodySmall, color: c.textSecondary, marginTop: 2 },
-  checkmark: { color: c.primary, fontSize: 18, fontWeight: '700' },
-});
+const makeStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: c.background },
+    header: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: c.cardBorder,
+    },
+    cancelText: { color: c.primary, fontSize: 17 },
+    title: { ...Typography.h3, color: c.textPrimary },
+    createText: { color: c.textPrimary, fontSize: 17, fontWeight: "600" },
+    content: { padding: Spacing.lg, gap: Spacing.lg },
+    section: { gap: Spacing.sm },
+    sectionLabel: { ...Typography.label, color: c.textSecondary },
+    input: {
+      backgroundColor: c.card,
+      borderWidth: 1,
+      borderColor: c.cardBorder,
+      borderRadius: BorderRadius.md,
+      color: c.textPrimary,
+      padding: Spacing.md,
+      fontSize: 15,
+    },
+    optionGrid: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.sm },
+    optionCard: {
+      backgroundColor: c.card,
+      borderWidth: 1,
+      borderColor: c.cardBorder,
+      borderRadius: BorderRadius.md,
+      padding: Spacing.md,
+      minWidth: "47%",
+    },
+    optionCardSelected: { borderColor: c.primary },
+    optionTitle: {
+      ...Typography.body,
+      color: c.textPrimary,
+      fontWeight: "600",
+    },
+    optionSub: {
+      ...Typography.bodySmall,
+      color: c.textSecondary,
+      marginTop: 2,
+    },
+    typeRow: {
+      backgroundColor: c.card,
+      borderWidth: 1,
+      borderColor: c.cardBorder,
+      borderRadius: BorderRadius.md,
+      padding: Spacing.md,
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    typeRowSelected: { borderColor: c.primary },
+    typeInfo: { flex: 1 },
+    typeName: { ...Typography.body, color: c.textPrimary, fontWeight: "600" },
+    typeSpecs: {
+      ...Typography.bodySmall,
+      color: c.textSecondary,
+      marginTop: 2,
+    },
+    checkmark: { color: c.primary, fontSize: 18, fontWeight: "700" },
+  });

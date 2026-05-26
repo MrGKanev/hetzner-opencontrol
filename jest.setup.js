@@ -1,4 +1,26 @@
-import 'react-native-gesture-handler/jestSetup';
+jest.mock('react-native-gesture-handler', () => {
+  const { View } = require('react-native');
+  return {
+    GestureHandlerRootView: View,
+    Gesture: { Tap: jest.fn(() => ({ onBegin: jest.fn().mockReturnThis() })) },
+    GestureDetector: View,
+    Swipeable: View,
+    DrawerLayout: View,
+    RawButton: View,
+    BaseButton: View,
+    RectButton: View,
+    BorderlessButton: View,
+    PanGestureHandler: View,
+    TapGestureHandler: View,
+    LongPressGestureHandler: View,
+    PinchGestureHandler: View,
+    RotationGestureHandler: View,
+    FlingGestureHandler: View,
+    gestureHandlerRootHOC: jest.fn((c) => c),
+    Directions: {},
+    State: {},
+  };
+});
 
 jest.mock('react-native-keychain', () => ({
   setGenericPassword: jest.fn(() => Promise.resolve(true)),

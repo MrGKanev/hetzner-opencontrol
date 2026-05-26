@@ -1,7 +1,7 @@
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { darkColors, lightColors, type ThemeColors } from '../theme';
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { darkColors, lightColors, type ThemeColors } from "../theme";
 
 interface ThemeState {
   isDark: boolean;
@@ -17,16 +17,21 @@ export const useThemeStore = create<ThemeState>()(
       toggle: () =>
         set((s) => {
           const isDark = !s.isDark;
-          return { isDark, colors: (isDark ? darkColors : lightColors) as ThemeColors };
+          return {
+            isDark,
+            colors: (isDark ? darkColors : lightColors) as ThemeColors,
+          };
         }),
     }),
     {
-      name: 'app-theme',
+      name: "app-theme",
       storage: createJSONStorage(() => AsyncStorage),
       // Only persist isDark; rehydrate colors from it
       onRehydrateStorage: () => (state) => {
         if (state) {
-          state.colors = (state.isDark ? darkColors : lightColors) as ThemeColors;
+          state.colors = (
+            state.isDark ? darkColors : lightColors
+          ) as ThemeColors;
         }
       },
     },

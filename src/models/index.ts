@@ -1,6 +1,14 @@
 // ─── Server ─────────────────────────────────────────────────────────────────
 
-export type ServerStatus = 'running' | 'off' | 'stopping' | 'starting' | 'rebuilding' | 'migrating' | 'deleting' | 'unknown';
+export type ServerStatus =
+  | "running"
+  | "off"
+  | "stopping"
+  | "starting"
+  | "rebuilding"
+  | "migrating"
+  | "deleting"
+  | "unknown";
 
 export interface ServerType {
   id: number;
@@ -9,7 +17,7 @@ export interface ServerType {
   cores: number;
   memory: number;
   disk: number;
-  architecture: 'x86' | 'arm';
+  architecture: "x86" | "arm";
   prices: Price[];
 }
 
@@ -67,12 +75,12 @@ export interface Server {
 
 // ─── Image ──────────────────────────────────────────────────────────────────
 
-export type ImageType = 'system' | 'snapshot' | 'backup' | 'app' | 'temporary';
+export type ImageType = "system" | "snapshot" | "backup" | "app" | "temporary";
 
 export interface Image {
   id: number;
   type: ImageType;
-  status: 'available' | 'creating' | 'unavailable';
+  status: "available" | "creating" | "unavailable";
   name: string | null;
   description: string;
   image_size: number | null;
@@ -92,8 +100,8 @@ export interface Iso {
   id: number;
   name: string | null;
   description: string;
-  type: 'public' | 'private';
-  architecture: 'x86' | 'arm' | null;
+  type: "public" | "private";
+  architecture: "x86" | "arm" | null;
 }
 
 // ─── Volume ─────────────────────────────────────────────────────────────────
@@ -105,7 +113,7 @@ export interface Volume {
   location: Location;
   size: number;
   linux_device: string;
-  status: 'available' | 'creating';
+  status: "available" | "creating";
   created: string;
   labels: Record<string, string>;
   protection: { delete: boolean };
@@ -119,7 +127,7 @@ export interface FloatingIP {
   name: string;
   description: string;
   ip: string;
-  type: 'ipv4' | 'ipv6';
+  type: "ipv4" | "ipv6";
   server: number | null;
   dns_ptr: DnsPtr[];
   home_location: Location;
@@ -135,9 +143,9 @@ export interface PrimaryIP {
   id: number;
   name: string;
   ip: string;
-  type: 'ipv4' | 'ipv6';
+  type: "ipv4" | "ipv6";
   assignee_id: number | null;
-  assignee_type: 'server';
+  assignee_type: "server";
   auto_delete: boolean;
   blocked: boolean;
   datacenter: Datacenter;
@@ -149,8 +157,8 @@ export interface PrimaryIP {
 
 // ─── Firewall ───────────────────────────────────────────────────────────────
 
-export type FirewallDirection = 'in' | 'out';
-export type FirewallProtocol = 'tcp' | 'udp' | 'icmp' | 'esp' | 'gre';
+export type FirewallDirection = "in" | "out";
+export type FirewallProtocol = "tcp" | "udp" | "icmp" | "esp" | "gre";
 
 export interface FirewallRule {
   direction: FirewallDirection;
@@ -165,7 +173,11 @@ export interface Firewall {
   id: number;
   name: string;
   rules: FirewallRule[];
-  applied_to: Array<{ type: 'server' | 'label_selector'; server?: { id: number }; label_selector?: { selector: string } }>;
+  applied_to: Array<{
+    type: "server" | "label_selector";
+    server?: { id: number };
+    label_selector?: { selector: string };
+  }>;
   labels: Record<string, string>;
   created: string;
 }
@@ -173,7 +185,7 @@ export interface Firewall {
 // ─── Network ────────────────────────────────────────────────────────────────
 
 export interface Subnet {
-  type: 'cloud' | 'server' | 'vswitch';
+  type: "cloud" | "server" | "vswitch";
   ip_range: string;
   network_zone: string;
   gateway: string;
@@ -197,10 +209,14 @@ export interface Network {
 export interface LoadBalancer {
   id: number;
   name: string;
-  public_net: { enabled: boolean; ipv4: { ip: string; dns_ptr: string }; ipv6: { ip: string; dns_ptr: string } };
+  public_net: {
+    enabled: boolean;
+    ipv4: { ip: string; dns_ptr: string };
+    ipv6: { ip: string; dns_ptr: string };
+  };
   location: Location;
   load_balancer_type: { id: number; name: string; description: string };
-  algorithm: { type: 'round_robin' | 'least_connections' };
+  algorithm: { type: "round_robin" | "least_connections" };
   services: LoadBalancerService[];
   targets: LoadBalancerTarget[];
   labels: Record<string, string>;
@@ -209,14 +225,20 @@ export interface LoadBalancer {
 }
 
 export interface LoadBalancerService {
-  protocol: 'tcp' | 'http' | 'https';
+  protocol: "tcp" | "http" | "https";
   listen_port: number;
   destination_port: number;
-  health_check: { protocol: string; port: number; interval: number; timeout: number; retries: number };
+  health_check: {
+    protocol: string;
+    port: number;
+    interval: number;
+    timeout: number;
+    retries: number;
+  };
 }
 
 export interface LoadBalancerTarget {
-  type: 'server' | 'label_selector' | 'ip';
+  type: "server" | "label_selector" | "ip";
   server?: { id: number };
   label_selector?: { selector: string };
   ip?: { ip: string };
@@ -231,7 +253,7 @@ export interface LoadBalancerTarget {
 export interface PlacementGroup {
   id: number;
   name: string;
-  type: 'spread';
+  type: "spread";
   servers: number[];
   labels: Record<string, string>;
   created: string;
@@ -253,7 +275,7 @@ export interface SSHKey {
 export interface Certificate {
   id: number;
   name: string;
-  type: 'uploaded' | 'managed';
+  type: "uploaded" | "managed";
   domain_names: string[];
   fingerprint: string | null;
   not_valid_before: string | null;
@@ -267,7 +289,7 @@ export interface Certificate {
 export interface Action {
   id: number;
   command: string;
-  status: 'running' | 'success' | 'error';
+  status: "running" | "success" | "error";
   progress: number;
   started: string;
   finished: string | null;
@@ -286,15 +308,15 @@ export interface ServerMetrics {
   end: string;
   step: number;
   time_series: {
-    'cpu'?: MetricTimeSeries;
-    'disk.0.iops.read'?: MetricTimeSeries;
-    'disk.0.iops.write'?: MetricTimeSeries;
-    'disk.0.bandwidth.read'?: MetricTimeSeries;
-    'disk.0.bandwidth.write'?: MetricTimeSeries;
-    'network.0.pps.in'?: MetricTimeSeries;
-    'network.0.pps.out'?: MetricTimeSeries;
-    'network.0.bandwidth.in'?: MetricTimeSeries;
-    'network.0.bandwidth.out'?: MetricTimeSeries;
+    cpu?: MetricTimeSeries;
+    "disk.0.iops.read"?: MetricTimeSeries;
+    "disk.0.iops.write"?: MetricTimeSeries;
+    "disk.0.bandwidth.read"?: MetricTimeSeries;
+    "disk.0.bandwidth.write"?: MetricTimeSeries;
+    "network.0.pps.in"?: MetricTimeSeries;
+    "network.0.pps.out"?: MetricTimeSeries;
+    "network.0.bandwidth.in"?: MetricTimeSeries;
+    "network.0.bandwidth.out"?: MetricTimeSeries;
   };
 }
 

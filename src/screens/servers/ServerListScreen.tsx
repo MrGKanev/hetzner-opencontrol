@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -10,49 +10,67 @@ import {
   Alert,
   Platform,
   TextInput,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 
-import { useServerStore } from '../../store/serverStore';
-import { useFavoritesStore } from '../../store/favoritesStore';
-import { powerOnServer, powerOffServer, rebootServer, deleteServer } from '../../api/servers';
-import { Spacing, BorderRadius, Typography } from '../../theme';
-import type { ThemeColors } from '../../theme';
-import { useColors } from '../../store/themeStore';
-import { ActionSheetModal, showActionSheet } from '../../components/common/ActionSheet';
-import { Haptics } from '../../services/haptics';
-import type { RootStackParamList } from '../../navigation';
-import type { Server, ServerStatus } from '../../models';
-import { getStatusColor, capitalizeFirst } from '../../utils/serverStatus';
+import { useServerStore } from "../../store/serverStore";
+import { useFavoritesStore } from "../../store/favoritesStore";
+import {
+  powerOnServer,
+  powerOffServer,
+  rebootServer,
+  deleteServer,
+} from "../../api/servers";
+import { Spacing, BorderRadius, Typography } from "../../theme";
+import type { ThemeColors } from "../../theme";
+import { useColors } from "../../store/themeStore";
+import {
+  ActionSheetModal,
+  showActionSheet,
+} from "../../components/common/ActionSheet";
+import { Haptics } from "../../services/haptics";
+import type { RootStackParamList } from "../../navigation";
+import type { Server, ServerStatus } from "../../models";
+import { getStatusColor, capitalizeFirst } from "../../utils/serverStatus";
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 const runningActions = (fav: boolean) => [
-  { label: 'View Details', icon: 'monitor' },
-  { label: 'Open Console', icon: 'console' },
-  { label: fav ? 'Unfavorite' : 'Favorite', icon: fav ? 'star-off-outline' : 'star-outline' },
-  { label: 'Reboot', icon: 'restart' },
-  { label: 'Power Off', icon: 'power', destructive: true },
-  { label: 'Delete', icon: 'delete-outline', destructive: true },
+  { label: "View Details", icon: "monitor" },
+  { label: "Open Console", icon: "console" },
+  {
+    label: fav ? "Unfavorite" : "Favorite",
+    icon: fav ? "star-off-outline" : "star-outline",
+  },
+  { label: "Reboot", icon: "restart" },
+  { label: "Power Off", icon: "power", destructive: true },
+  { label: "Delete", icon: "delete-outline", destructive: true },
 ];
 
 const offActions = (fav: boolean) => [
-  { label: 'View Details', icon: 'monitor' },
-  { label: fav ? 'Unfavorite' : 'Favorite', icon: fav ? 'star-off-outline' : 'star-outline' },
-  { label: 'Power On', icon: 'play-circle-outline' },
-  { label: 'Delete', icon: 'delete-outline', destructive: true },
+  { label: "View Details", icon: "monitor" },
+  {
+    label: fav ? "Unfavorite" : "Favorite",
+    icon: fav ? "star-off-outline" : "star-outline",
+  },
+  { label: "Power On", icon: "play-circle-outline" },
+  { label: "Delete", icon: "delete-outline", destructive: true },
 ];
 
 export default function ServerListScreen() {
   const navigation = useNavigation<Nav>();
   const { servers, fetchServers, refreshServers, isLoading } = useServerStore();
-  const { serverIds: favoriteIds, toggle: toggleFavorite, isFavorite } = useFavoritesStore();
+  const {
+    serverIds: favoriteIds,
+    toggle: toggleFavorite,
+    isFavorite,
+  } = useFavoritesStore();
   const [sheetVisible, setSheetVisible] = useState(false);
   const [selected, setSelected] = useState<Server | null>(null);
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const colors = useColors();
   const styles = makeStyles(colors);
 
@@ -60,12 +78,13 @@ export default function ServerListScreen() {
     const base = query.trim()
       ? (() => {
           const q = query.toLowerCase();
-          return servers.filter(s =>
-            s.name.toLowerCase().includes(q) ||
-            s.datacenter.location.name.toLowerCase().includes(q) ||
-            s.server_type.name.toLowerCase().includes(q) ||
-            s.public_net.ipv4?.ip.includes(q) ||
-            s.public_net.ipv6?.ip.toLowerCase().includes(q),
+          return servers.filter(
+            (s) =>
+              s.name.toLowerCase().includes(q) ||
+              s.datacenter.location.name.toLowerCase().includes(q) ||
+              s.server_type.name.toLowerCase().includes(q) ||
+              s.public_net.ipv4?.ip.includes(q) ||
+              s.public_net.ipv6?.ip.toLowerCase().includes(q),
           );
         })()
       : servers;
@@ -76,20 +95,24 @@ export default function ServerListScreen() {
     });
   }, [servers, query, favoriteIds]);
 
-  useEffect(() => { fetchServers(); }, []);
+  useEffect(() => {
+    fetchServers();
+  }, []);
 
   const getActions = (server: Server) =>
-    server.status === 'running' ? runningActions(isFavorite(server.id)) : offActions(isFavorite(server.id));
+    server.status === "running"
+      ? runningActions(isFavorite(server.id))
+      : offActions(isFavorite(server.id));
 
   const openActions = (server: Server) => {
     Haptics.light();
     setSelected(server);
     const actions = getActions(server);
-    if (Platform.OS === 'ios') {
+    if (Platform.OS === "ios") {
       showActionSheet({
         title: server.name,
         options: actions,
-        onSelect: i => handleAction(i, actions, server),
+        onSelect: (i) => handleAction(i, actions, server),
       });
     } else {
       setSheetVisible(true);
@@ -103,53 +126,83 @@ export default function ServerListScreen() {
   ) => {
     const label = actions[index].label;
     switch (label) {
-      case 'View Details':
-        navigation.navigate('ServerDetail', { serverId: server.id });
+      case "View Details":
+        navigation.navigate("ServerDetail", { serverId: server.id });
         break;
-      case 'Open Console':
-        navigation.navigate('VncConsole', { serverId: server.id, serverName: server.name });
+      case "Open Console":
+        navigation.navigate("VncConsole", {
+          serverId: server.id,
+          serverName: server.name,
+        });
         break;
-      case 'Favorite':
-      case 'Unfavorite':
+      case "Favorite":
+      case "Unfavorite":
         Haptics.light();
         toggleFavorite(server.id);
         break;
-      case 'Reboot':
+      case "Reboot":
         Haptics.warning();
-        Alert.alert('Reboot', `Reboot "${server.name}"?`, [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Reboot', onPress: () => { Haptics.medium(); rebootServer(server.id).then(() => { Haptics.success(); refreshServers(); }); } },
+        Alert.alert("Reboot", `Reboot "${server.name}"?`, [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Reboot",
+            onPress: () => {
+              Haptics.medium();
+              rebootServer(server.id).then(() => {
+                Haptics.success();
+                refreshServers();
+              });
+            },
+          },
         ]);
         break;
-      case 'Power Off':
+      case "Power Off":
         Haptics.warning();
-        Alert.alert('Power Off', `Power off "${server.name}"?`, [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Power Off', style: 'destructive', onPress: () => { Haptics.heavy(); powerOffServer(server.id).then(() => { Haptics.success(); refreshServers(); }); } },
+        Alert.alert("Power Off", `Power off "${server.name}"?`, [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Power Off",
+            style: "destructive",
+            onPress: () => {
+              Haptics.heavy();
+              powerOffServer(server.id).then(() => {
+                Haptics.success();
+                refreshServers();
+              });
+            },
+          },
         ]);
         break;
-      case 'Power On':
+      case "Power On":
         Haptics.medium();
         await powerOnServer(server.id);
         Haptics.success();
         refreshServers();
         break;
-      case 'Delete':
+      case "Delete":
         Haptics.warning();
-        Alert.alert('Delete Server', `Delete "${server.name}"? This cannot be undone.`, [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Delete', style: 'destructive',
-            onPress: async () => {
-              Haptics.heavy();
-              try {
-                await deleteServer(server.id);
-                Haptics.success();
-                refreshServers();
-              } catch (e: any) { Haptics.error(); Alert.alert('Error', e.message); }
+        Alert.alert(
+          "Delete Server",
+          `Delete "${server.name}"? This cannot be undone.`,
+          [
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "Delete",
+              style: "destructive",
+              onPress: async () => {
+                Haptics.heavy();
+                try {
+                  await deleteServer(server.id);
+                  Haptics.success();
+                  refreshServers();
+                } catch (e: any) {
+                  Haptics.error();
+                  Alert.alert("Error", e.message);
+                }
+              },
             },
-          },
-        ]);
+          ],
+        );
         break;
     }
   };
@@ -157,12 +210,15 @@ export default function ServerListScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backBtn}
+        >
           <Text style={styles.backIcon}>‹</Text>
         </TouchableOpacity>
         <Text style={styles.title}>All Servers</Text>
         <TouchableOpacity
-          onPress={() => navigation.navigate('CreateServer')}
+          onPress={() => navigation.navigate("CreateServer")}
           style={styles.addBtn}
         >
           <Text style={styles.addIcon}>＋</Text>
@@ -188,16 +244,22 @@ export default function ServerListScreen() {
       ) : (
         <FlatList
           data={filtered}
-          keyExtractor={s => String(s.id)}
+          keyExtractor={(s) => String(s.id)}
           refreshControl={
-            <RefreshControl refreshing={isLoading} onRefresh={refreshServers} tintColor={colors.primary} />
+            <RefreshControl
+              refreshing={isLoading}
+              onRefresh={refreshServers}
+              tintColor={colors.primary}
+            />
           }
           contentContainerStyle={styles.list}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
           renderItem={({ item }) => (
             <ServerRow
               server={item}
-              onPress={() => navigation.navigate('ServerDetail', { serverId: item.id })}
+              onPress={() =>
+                navigation.navigate("ServerDetail", { serverId: item.id })
+              }
               onLongPress={() => openActions(item)}
               colors={colors}
               favorite={isFavorite(item.id)}
@@ -205,7 +267,7 @@ export default function ServerListScreen() {
           )}
           ListEmptyComponent={
             <Text style={styles.empty}>
-              {query ? `No servers matching "${query}"` : 'No servers found'}
+              {query ? `No servers matching "${query}"` : "No servers found"}
             </Text>
           }
         />
@@ -215,7 +277,7 @@ export default function ServerListScreen() {
         visible={sheetVisible}
         title={selected?.name}
         options={selected ? getActions(selected) : []}
-        onSelect={i => {
+        onSelect={(i) => {
           if (selected) handleAction(i, getActions(selected), selected);
         }}
         onCancel={() => setSheetVisible(false)}
@@ -251,11 +313,18 @@ function ServerRow({
         <View style={styles.nameRow}>
           <Text style={styles.serverName}>{server.name}</Text>
           {favorite && (
-            <Icon name="star" size={14} color={colors.warning} style={{ marginLeft: 6, marginTop: 2 }} />
+            <Icon
+              name="star"
+              size={14}
+              color={colors.warning}
+              style={{ marginLeft: 6, marginTop: 2 }}
+            />
           )}
         </View>
         <Text style={styles.serverMeta}>
-          {server.server_type.name.toUpperCase()} | {server.server_type.architecture} | {server.server_type.disk}GB | {server.datacenter.location.name}
+          {server.server_type.name.toUpperCase()} |{" "}
+          {server.server_type.architecture} | {server.server_type.disk}GB |{" "}
+          {server.datacenter.location.name}
         </Text>
       </View>
       <View style={styles.statusContainer}>
@@ -268,59 +337,68 @@ function ServerRow({
   );
 }
 
-
-const makeStyles = (c: ThemeColors) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: c.background },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-  },
-  backBtn: { marginRight: Spacing.sm },
-  backIcon: { color: c.primary, fontSize: 30, fontWeight: '300' },
-  title: { ...Typography.h1, color: c.textPrimary, flex: 1 },
-  addBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: BorderRadius.full,
-    borderWidth: 1.5,
-    borderColor: c.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addIcon: { color: c.primary, fontSize: 18 },
-  searchWrap: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.sm,
-  },
-  searchInput: {
-    backgroundColor: c.card,
-    borderWidth: 1,
-    borderColor: c.cardBorder,
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm + 2,
-    ...Typography.body,
-    color: c.textPrimary,
-  },
-  list: { padding: Spacing.lg },
-  separator: { height: Spacing.sm },
-  row: {
-    backgroundColor: c.card,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: c.cardBorder,
-    padding: Spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  rowContent: { flex: 1 },
-  nameRow: { flexDirection: 'row', alignItems: 'center' },
-  serverName: { ...Typography.h3, color: c.textPrimary },
-  serverMeta: { ...Typography.bodySmall, color: c.textSecondary, marginTop: 2 },
-  statusContainer: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  statusDot: { width: 8, height: 8, borderRadius: 4 },
-  statusText: { fontSize: 13, fontWeight: '500' },
-  empty: { ...Typography.bodySmall, color: c.textSecondary, textAlign: 'center', marginTop: 40 },
-});
+const makeStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: c.background },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md,
+    },
+    backBtn: { marginRight: Spacing.sm },
+    backIcon: { color: c.primary, fontSize: 30, fontWeight: "300" },
+    title: { ...Typography.h1, color: c.textPrimary, flex: 1 },
+    addBtn: {
+      width: 32,
+      height: 32,
+      borderRadius: BorderRadius.full,
+      borderWidth: 1.5,
+      borderColor: c.primary,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    addIcon: { color: c.primary, fontSize: 18 },
+    searchWrap: {
+      paddingHorizontal: Spacing.lg,
+      paddingBottom: Spacing.sm,
+    },
+    searchInput: {
+      backgroundColor: c.card,
+      borderWidth: 1,
+      borderColor: c.cardBorder,
+      borderRadius: BorderRadius.md,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm + 2,
+      ...Typography.body,
+      color: c.textPrimary,
+    },
+    list: { padding: Spacing.lg },
+    separator: { height: Spacing.sm },
+    row: {
+      backgroundColor: c.card,
+      borderRadius: BorderRadius.md,
+      borderWidth: 1,
+      borderColor: c.cardBorder,
+      padding: Spacing.md,
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    rowContent: { flex: 1 },
+    nameRow: { flexDirection: "row", alignItems: "center" },
+    serverName: { ...Typography.h3, color: c.textPrimary },
+    serverMeta: {
+      ...Typography.bodySmall,
+      color: c.textSecondary,
+      marginTop: 2,
+    },
+    statusContainer: { flexDirection: "row", alignItems: "center", gap: 5 },
+    statusDot: { width: 8, height: 8, borderRadius: 4 },
+    statusText: { fontSize: 13, fontWeight: "500" },
+    empty: {
+      ...Typography.bodySmall,
+      color: c.textSecondary,
+      textAlign: "center",
+      marginTop: 40,
+    },
+  });

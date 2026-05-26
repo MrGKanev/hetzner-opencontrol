@@ -1,32 +1,32 @@
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import React from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 
-import { useAuthStore } from '../store/authStore';
-import { useColors } from '../store/themeStore';
+import { useAuthStore } from "../store/authStore";
+import { useColors } from "../store/themeStore";
 
 // Screens
-import LoginScreen from '../screens/auth/LoginScreen';
-import DashboardScreen from '../screens/dashboard/DashboardScreen';
-import ServersMenuScreen from '../screens/servers/ServersMenuScreen';
-import ServerListScreen from '../screens/servers/ServerListScreen';
-import ServerDetailScreen from '../screens/servers/ServerDetailScreen';
-import ServerMetricsScreen from '../screens/servers/ServerMetricsScreen';
-import VncConsoleScreen from '../screens/servers/VncConsoleScreen';
-import CreateServerScreen from '../screens/servers/CreateServerScreen';
-import SshKeyListScreen from '../screens/servers/SshKeyListScreen';
-import ImagesScreen from '../screens/servers/ImagesScreen';
-import PlacementGroupListScreen from '../screens/servers/PlacementGroupListScreen';
-import VolumeListScreen from '../screens/volumes/VolumeListScreen';
+import LoginScreen from "../screens/auth/LoginScreen";
+import DashboardScreen from "../screens/dashboard/DashboardScreen";
+import ServersMenuScreen from "../screens/servers/ServersMenuScreen";
+import ServerListScreen from "../screens/servers/ServerListScreen";
+import ServerDetailScreen from "../screens/servers/ServerDetailScreen";
+import ServerMetricsScreen from "../screens/servers/ServerMetricsScreen";
+import VncConsoleScreen from "../screens/servers/VncConsoleScreen";
+import CreateServerScreen from "../screens/servers/CreateServerScreen";
+import SshKeyListScreen from "../screens/servers/SshKeyListScreen";
+import ImagesScreen from "../screens/servers/ImagesScreen";
+import PlacementGroupListScreen from "../screens/servers/PlacementGroupListScreen";
+import VolumeListScreen from "../screens/volumes/VolumeListScreen";
 // TODO: Storage Boxes require Hetzner Robot API (separate credentials) - implement later
 // import StorageBoxListScreen from '../screens/storage/StorageBoxListScreen';
-import NetworkingNavigator from './NetworkingNavigator';
-import SettingsScreen from '../screens/settings/SettingsScreen';
-import PrimaryIpListScreen from '../screens/networking/PrimaryIpListScreen';
-import SearchScreen from '../screens/search/SearchScreen';
-import PricingCalculatorScreen from '../screens/pricing/PricingCalculatorScreen';
+import NetworkingNavigator from "./NetworkingNavigator";
+import SettingsScreen from "../screens/settings/SettingsScreen";
+import PrimaryIpListScreen from "../screens/networking/PrimaryIpListScreen";
+import SearchScreen from "../screens/search/SearchScreen";
+import PricingCalculatorScreen from "../screens/pricing/PricingCalculatorScreen";
 
 export type RootStackParamList = {
   Login: undefined;
@@ -68,7 +68,10 @@ function ServersNavigator() {
       <ServersStack.Screen name="ServerList" component={ServerListScreen} />
       <ServersStack.Screen name="SshKeyList" component={SshKeyListScreen} />
       <ServersStack.Screen name="Images" component={ImagesScreen} />
-      <ServersStack.Screen name="PlacementGroupList" component={PlacementGroupListScreen} />
+      <ServersStack.Screen
+        name="PlacementGroupList"
+        component={PlacementGroupListScreen}
+      />
     </ServersStack.Navigator>
   );
 }
@@ -93,40 +96,50 @@ function MainTabs() {
         name="Dashboard"
         component={DashboardScreen}
         options={{
-          title: 'Overview',
-          tabBarIcon: ({ color, size }) => <Icon name="view-dashboard-outline" color={color} size={size} />,
+          title: "Overview",
+          tabBarIcon: ({ color, size }) => (
+            <Icon name="view-dashboard-outline" color={color} size={size} />
+          ),
         }}
       />
       <Tab.Screen
         name="Servers"
         component={ServersNavigator}
         options={{
-          title: 'Servers',
-          tabBarIcon: ({ color, size }) => <Icon name="server" color={color} size={size} />,
+          title: "Servers",
+          tabBarIcon: ({ color, size }) => (
+            <Icon name="server" color={color} size={size} />
+          ),
         }}
       />
       <Tab.Screen
         name="Networking"
         component={NetworkingNavigator}
         options={{
-          title: 'Networking',
-          tabBarIcon: ({ color, size }) => <Icon name="lan" color={color} size={size} />,
+          title: "Networking",
+          tabBarIcon: ({ color, size }) => (
+            <Icon name="lan" color={color} size={size} />
+          ),
         }}
       />
       <Tab.Screen
         name="Volumes"
         component={VolumeListScreen}
         options={{
-          title: 'Volumes',
-          tabBarIcon: ({ color, size }) => <Icon name="harddisk" color={color} size={size} />,
+          title: "Volumes",
+          tabBarIcon: ({ color, size }) => (
+            <Icon name="harddisk" color={color} size={size} />
+          ),
         }}
       />
       <Tab.Screen
         name="Search"
         component={SearchScreen}
         options={{
-          title: 'Search',
-          tabBarIcon: ({ color, size }) => <Icon name="magnify" color={color} size={size} />,
+          title: "Search",
+          tabBarIcon: ({ color, size }) => (
+            <Icon name="magnify" color={color} size={size} />
+          ),
         }}
       />
       {/* TODO: StorageBoxes tab - needs Robot API integration */}
@@ -135,7 +148,7 @@ function MainTabs() {
 }
 
 export default function Navigation() {
-  const isAuthenticated = useAuthStore(s => s.isAuthenticated);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   return (
     <NavigationContainer>
@@ -148,37 +161,46 @@ export default function Navigation() {
             <RootStack.Screen
               name="ServerDetail"
               component={ServerDetailScreen}
-              options={{ animation: 'slide_from_right' }}
+              options={{ animation: "slide_from_right" }}
             />
             <RootStack.Screen
               name="ServerMetrics"
               component={ServerMetricsScreen}
-              options={{ animation: 'slide_from_right' }}
+              options={{ animation: "slide_from_right" }}
             />
             <RootStack.Screen
               name="VncConsole"
               component={VncConsoleScreen}
-              options={{ animation: 'slide_from_bottom', presentation: 'fullScreenModal' }}
+              options={{
+                animation: "slide_from_bottom",
+                presentation: "fullScreenModal",
+              }}
             />
             <RootStack.Screen
               name="CreateServer"
               component={CreateServerScreen}
-              options={{ animation: 'slide_from_bottom', presentation: 'modal' }}
+              options={{
+                animation: "slide_from_bottom",
+                presentation: "modal",
+              }}
             />
             <RootStack.Screen
               name="Settings"
               component={SettingsScreen}
-              options={{ animation: 'slide_from_bottom', presentation: 'modal' }}
+              options={{
+                animation: "slide_from_bottom",
+                presentation: "modal",
+              }}
             />
             <RootStack.Screen
               name="PrimaryIpList"
               component={PrimaryIpListScreen}
-              options={{ animation: 'slide_from_right' }}
+              options={{ animation: "slide_from_right" }}
             />
             <RootStack.Screen
               name="PricingCalculator"
               component={PricingCalculatorScreen}
-              options={{ animation: 'slide_from_right' }}
+              options={{ animation: "slide_from_right" }}
             />
           </>
         )}

@@ -1,15 +1,15 @@
-import { StyleSheet } from 'react-native';
-import { Spacing, BorderRadius, Typography } from './index';
-import type { ThemeColors } from './index';
+import { StyleSheet } from "react-native";
+import { Spacing, BorderRadius, Typography } from "./index";
+import type { ThemeColors } from "./index";
 
 export function makeBaseListStyles(c: ThemeColors) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: c.background },
     header: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md },
     headerRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
       paddingHorizontal: Spacing.lg,
       paddingVertical: Spacing.md,
     },
@@ -21,16 +21,26 @@ export function makeBaseListStyles(c: ThemeColors) {
       borderWidth: 1,
       borderColor: c.cardBorder,
       padding: Spacing.md,
-      flexDirection: 'row' as const,
-      alignItems: 'center' as const,
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
     },
     cardLeft: { flex: 1 },
-    menuDots: { color: c.textMuted, fontSize: 16, letterSpacing: 1, padding: Spacing.xs },
-    empty: { ...Typography.bodySmall, color: c.textSecondary, textAlign: 'center' as const, marginTop: 40 },
+    menuDots: {
+      color: c.textMuted,
+      fontSize: 16,
+      letterSpacing: 1,
+      padding: Spacing.xs,
+    },
+    empty: {
+      ...Typography.bodySmall,
+      color: c.textSecondary,
+      textAlign: "center" as const,
+      marginTop: 40,
+    },
     center: {
       flex: 1,
-      alignItems: 'center' as const,
-      justifyContent: 'center' as const,
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
       padding: Spacing.xl,
       gap: Spacing.md,
       marginTop: 40,
@@ -41,8 +51,8 @@ export function makeBaseListStyles(c: ThemeColors) {
       height: 36,
       borderRadius: BorderRadius.sm,
       backgroundColor: c.surface,
-      alignItems: 'center' as const,
-      justifyContent: 'center' as const,
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
       marginRight: Spacing.sm,
     },
     badge: {
@@ -51,6 +61,6 @@ export function makeBaseListStyles(c: ThemeColors) {
       borderRadius: BorderRadius.full,
       marginLeft: Spacing.sm,
     },
-    badgeText: { fontSize: 11, fontWeight: '600' as const },
+    badgeText: { fontSize: 11, fontWeight: "600" as const },
   });
 }

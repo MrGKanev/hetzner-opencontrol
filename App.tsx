@@ -1,13 +1,13 @@
-import React, { useEffect } from 'react';
-import { StatusBar } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import React, { useEffect } from "react";
+import { StatusBar } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
-import Navigation from './src/navigation';
-import { useAuthStore } from './src/store/authStore';
-import { useProjectsStore } from './src/store/projectsStore';
-import { Colors } from './src/theme';
-import { useServerPoller } from './src/services/serverPoller';
+import Navigation from "./src/navigation";
+import { useAuthStore } from "./src/store/authStore";
+import { useProjectsStore } from "./src/store/projectsStore";
+import { Colors } from "./src/theme";
+import { useServerPoller } from "./src/services/serverPoller";
 
 export default function App() {
   const { tryRestoreSession, isAuthenticated } = useAuthStore();
@@ -24,7 +24,7 @@ export default function App() {
             // When biometrics are enabled, the user must authenticate manually
             // on the LoginScreen — same guard as tryRestoreSession itself.
             const { biometricType } = useAuthStore.getState();
-            if (biometricType === 'none') {
+            if (biometricType === "none") {
               await useProjectsStore.getState().tryRestoreActiveProject();
             }
           }
@@ -38,7 +38,10 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
+        <StatusBar
+          barStyle="light-content"
+          backgroundColor={Colors.background}
+        />
         <Navigation />
       </SafeAreaProvider>
     </GestureHandlerRootView>
