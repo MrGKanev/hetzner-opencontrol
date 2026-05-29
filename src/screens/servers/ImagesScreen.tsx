@@ -77,7 +77,7 @@ export default function ImagesScreen() {
   };
 
   const handleAction = (index: number, image: Image) => {
-    if (IMAGE_ACTIONS[index].label === "Delete") {
+    if (IMAGE_ACTIONS[index]!.label === "Delete") {
       const label = image.description || image.name || `Image #${image.id}`;
       Alert.alert(
         `Delete ${tab === "snapshot" ? "Snapshot" : "Backup"}`,

@@ -1,0 +1,2 @@
+# lint-staged is available but not run automatically.
+# Run manually: pnpm exec lint-staged

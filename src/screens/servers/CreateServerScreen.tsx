@@ -160,6 +160,7 @@ export default function CreateServerScreen({ navigation }: Props) {
           <View style={styles.optionGrid}>
             {imagesByFlavor.map(({ flavor, images: flavorImages }) => {
               const latestImage = flavorImages[0];
+              if (!latestImage) return null;
               const isSelected = selectedImage === latestImage.id;
               return (
                 <TouchableOpacity

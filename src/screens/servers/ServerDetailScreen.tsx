@@ -157,7 +157,7 @@ export default function ServerDetailScreen({ route, navigation }: Props) {
     options: ActionSheetOption[],
     s: Server,
   ) => {
-    switch (options[index].label) {
+    switch (options[index]!.label) {
       case "Power Off":
         runAction("Power Off", () => powerOffServer(s.id));
         break;
@@ -261,7 +261,7 @@ export default function ServerDetailScreen({ route, navigation }: Props) {
         title: "Choose ISO to Attach",
         options,
         onSelect: (i) =>
-          runAction("Attach ISO", () => attachIso(s.id, isos[i].id)),
+          runAction("Attach ISO", () => attachIso(s.id, isos[i]!.id)),
       });
     } else {
       Alert.alert("Attach ISO", "Choose an ISO to mount:", [
@@ -302,7 +302,7 @@ export default function ServerDetailScreen({ route, navigation }: Props) {
       showActionSheet({
         title: "Choose Image to Rebuild",
         options,
-        onSelect: (i) => confirmRebuild(s, images[i]),
+        onSelect: (i) => confirmRebuild(s, images[i]!),
       });
     } else {
       // On Android use a simple Alert list (first 3 options as workaround)

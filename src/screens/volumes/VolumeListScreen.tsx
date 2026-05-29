@@ -52,7 +52,7 @@ export default function VolumeListScreen() {
     actions: typeof attachedActions,
     volume: Volume,
   ) => {
-    const label = actions[index].label;
+    const label = actions[index]!.label;
     switch (label) {
       case "Detach":
         Alert.alert("Detach Volume", `Detach "${volume.name}" from server?`, [

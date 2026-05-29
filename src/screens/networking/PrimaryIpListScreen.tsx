@@ -61,7 +61,7 @@ export default function PrimaryIpListScreen() {
     actions: typeof assignedActions,
     ip: PrimaryIP,
   ) => {
-    const label = actions[index].label;
+    const label = actions[index]!.label;
     switch (label) {
       case "Copy IP":
         Clipboard.setString(ip.ip);

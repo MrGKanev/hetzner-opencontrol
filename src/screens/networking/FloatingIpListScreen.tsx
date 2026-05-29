@@ -61,7 +61,7 @@ export default function FloatingIpListScreen() {
     actions: typeof assignedActions,
     ip: FloatingIP,
   ) => {
-    const label = actions[index].label;
+    const label = actions[index]!.label;
     switch (label) {
       case "Copy IP":
         Clipboard.setString(ip.ip);

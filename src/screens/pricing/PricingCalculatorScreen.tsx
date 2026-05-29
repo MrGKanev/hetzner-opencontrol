@@ -42,9 +42,9 @@ export default function PricingCalculatorScreen() {
         // Default to first available location
         if (
           p.server_types.length > 0 &&
-          p.server_types[0].pricings.length > 0
+          p.server_types[0]!.pricings.length > 0
         ) {
-          setSelectedLocation(p.server_types[0].pricings[0].location.name);
+          setSelectedLocation(p.server_types[0]!.pricings[0]!.location.name);
         }
       })
       .catch((e) => Alert.alert("Error", e.message))

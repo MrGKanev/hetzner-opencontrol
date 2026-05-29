@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { Platform } from "react-native";
+import { Platform, AppState, type AppStateStatus } from "react-native";
 import * as Keychain from "react-native-keychain";
 import { createApiClient, destroyApiClient } from "../api/client";
 import { getServers } from "../api/servers";
@@ -10,6 +10,7 @@ import {
 } from "../services/biometrics";
 
 const KEYCHAIN_SERVICE = "HetznerOpenControl";
+const SESSION_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -22,6 +23,33 @@ interface AuthState {
   tryRestoreSession: () => Promise<boolean>;
   unlockWithBiometrics: () => Promise<boolean>;
   clearError: () => void;
+}
+
+let backgroundedAt: number | null = null;
+let appStateSubscription: ReturnType<typeof AppState.addEventListener> | null =
+  null;
+
+function startSessionWatch(lockFn: () => void) {
+  appStateSubscription?.remove();
+  appStateSubscription = AppState.addEventListener(
+    "change",
+    (next: AppStateStatus) => {
+      if (next === "background" || next === "inactive") {
+        backgroundedAt = Date.now();
+      } else if (next === "active" && backgroundedAt !== null) {
+        if (Date.now() - backgroundedAt >= SESSION_TIMEOUT_MS) {
+          lockFn();
+        }
+        backgroundedAt = null;
+      }
+    },
+  );
+}
+
+function stopSessionWatch() {
+  appStateSubscription?.remove();
+  appStateSubscription = null;
+  backgroundedAt = null;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -56,13 +84,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
 
       set({ isAuthenticated: true, isLoading: false });
-    } catch (e: any) {
+      startSessionWatch(() => get().logout());
+    } catch (e: unknown) {
       destroyApiClient();
-      set({ isLoading: false, error: e.message || "Invalid API key" });
+      set({
+        isLoading: false,
+        error: (e instanceof Error ? e.message : null) ?? "Invalid API key",
+      });
     }
   },
 
   logout: async () => {
+    stopSessionWatch();
     await Keychain.resetGenericPassword({ service: KEYCHAIN_SERVICE });
     destroyApiClient();
     // Also clear multi-project state if any
@@ -102,6 +135,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (credentials && credentials.password) {
         createApiClient(credentials.password);
         await getServers();
+        startSessionWatch(() => get().logout());
         return true;
       }
     } catch {
@@ -133,10 +167,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       createApiClient(credentials.password);
       await getServers();
       set({ isAuthenticated: true, isLoading: false });
+      startSessionWatch(() => get().logout());
       return true;
-    } catch (e: any) {
+    } catch (e: unknown) {
       destroyApiClient();
-      set({ isLoading: false, error: e.message });
+      set({
+        isLoading: false,
+        error: e instanceof Error ? e.message : "Unknown error",
+      });
       return false;
     }
   },

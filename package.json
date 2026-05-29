@@ -13,7 +13,10 @@
     "typecheck": "tsc --noEmit",
     "test": "jest",
     "build:novnc": "node scripts/build-novnc.js",
-    "release": "node scripts/release.js"
+    "release": "node scripts/release.js",
+    "bundle:analyze": "react-native-bundle-visualizer",
+    "changeset": "changeset",
+    "prepare": "husky"
   },
   "dependencies": {
     "@notifee/react-native": "^9.1.8",
@@ -23,7 +26,6 @@
     "@react-navigation/native": "^7.2.5",
     "@react-navigation/native-stack": "^7.16.0",
     "@tanstack/react-query": "^5.100.14",
-    "axios": "^1.16.1",
     "dayjs": "^1.11.21",
     "react": "^19.2.6",
     "react-native": "0.85.3",
@@ -43,6 +45,7 @@
     "@babel/core": "^7.29.7",
     "@babel/preset-env": "^7.29.7",
     "@babel/runtime": "^7.29.7",
+    "@changesets/cli": "^2.31.0",
     "@eslint/compat": "^2.1.0",
     "@novnc/novnc": "^1.4.0",
     "@react-native-community/cli": "^20.1.3",
@@ -63,10 +66,19 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-native": "^5.0.0",
+    "husky": "^9.1.7",
     "jest": "~30.3.0",
+    "lint-staged": "^17.0.5",
     "prettier": "^3.8.1",
+    "react-native-bundle-visualizer": "^4.0.0",
     "react-test-renderer": "^19.2.6",
     "typescript": "^6.0.3"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
   },
   "engines": {
     "node": ">= 22.11.0"

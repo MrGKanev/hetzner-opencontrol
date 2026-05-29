@@ -65,7 +65,7 @@ export default function PlacementGroupListScreen() {
   };
 
   const handleAction = async (index: number, group: PlacementGroup) => {
-    if (actions[index].label === "Delete") {
+    if (actions[index]!.label === "Delete") {
       if (group.servers.length > 0) {
         Alert.alert(
           "Cannot Delete",

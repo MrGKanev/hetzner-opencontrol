@@ -58,7 +58,7 @@ export default function CertificateListScreen() {
   } = useResourceList(["certificates"], getCertificates);
 
   const handleAction = async (index: number, cert: Certificate) => {
-    if (actions[index].label === "Delete") {
+    if (actions[index]!.label === "Delete") {
       confirmDelete(cert.name, async () => {
         await deleteCertificate(cert.id);
         setCerts((prev) => prev.filter((c) => c.id !== cert.id));

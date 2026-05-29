@@ -122,7 +122,7 @@ export default function ServerListScreen() {
     actions: ReturnType<typeof runningActions>,
     server: Server,
   ) => {
-    const label = actions[index].label;
+    const label = actions[index]!.label;
     switch (label) {
       case "View Details":
         navigation.navigate("ServerDetail", { serverId: server.id });

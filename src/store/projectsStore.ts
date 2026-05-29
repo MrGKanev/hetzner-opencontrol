@@ -93,7 +93,7 @@ export const useProjectsStore = create<ProjectsState>()(
           // Switch to another project or log out
           if (remaining.length > 0) {
             set({ projects: remaining });
-            await get().switchProject(remaining[0].id);
+            await get().switchProject(remaining[0]!.id);
           } else {
             destroyApiClient();
             queryClient.removeQueries({ queryKey: SERVERS_KEY });
