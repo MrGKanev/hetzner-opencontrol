@@ -12,7 +12,7 @@ import { showActionSheet } from '../../src/components/common/ActionSheet';
 const mockShowActionSheet = showActionSheet as jest.Mock;
 
 function makeWrapper() {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   return function Wrapper({ children }: { children: React.ReactNode }) {
     return <QueryClientProvider client={qc}>{children}</QueryClientProvider>;
   };
