@@ -153,6 +153,9 @@ importers:
       eslint-plugin-react-native:
         specifier: ^5.0.0
         version: 5.0.0(eslint@9.39.4)
+      hermes-compiler:
+        specifier: 250829098.0.10
+        version: 250829098.0.10
       husky:
         specifier: ^9.1.7
         version: 9.1.7
