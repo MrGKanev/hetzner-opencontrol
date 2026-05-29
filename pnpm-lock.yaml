@@ -102,6 +102,9 @@ importers:
       '@react-native/babel-preset':
         specifier: 0.85.3
         version: 0.85.3(@babel/core@7.29.7)
+      '@react-native/codegen':
+        specifier: 0.85.3
+        version: 0.85.3(@babel/core@7.29.7)
       '@react-native/eslint-config':
         specifier: 0.85.3
         version: 0.85.3(eslint@9.39.4)(jest@30.3.0(@types/node@25.9.1))(prettier@3.8.3)(typescript@6.0.3)
