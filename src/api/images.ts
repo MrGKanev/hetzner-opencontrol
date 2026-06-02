@@ -1,18 +1,9 @@
 import { getApiClient } from "./client";
+import { fetchAllPages } from "./pagination";
 import type { Image, Action } from "../models";
 
 export async function getImages(type: "snapshot" | "backup"): Promise<Image[]> {
-  const all: Image[] = [];
-  let page = 1;
-  while (true) {
-    const res = await getApiClient().get("/images", {
-      params: { page, per_page: 50, type },
-    });
-    all.push(...res.data.images);
-    if (!res.data.meta.pagination.next_page) break;
-    page++;
-  }
-  return all;
+  return fetchAllPages<Image>("/images", "images", { type });
 }
 
 export async function deleteImage(id: number): Promise<void> {

@@ -1,6 +1,13 @@
 import ReactNativeBiometrics from 'react-native-biometrics';
 import { getBiometricType, authenticateWithBiometrics } from '../../src/services/biometrics';
 
+// ── constructor options ───────────────────────────────────────────────────────
+
+it('initialises ReactNativeBiometrics with allowDeviceCredentials=false', () => {
+  const constructorArgs = (ReactNativeBiometrics as jest.Mock).mock.calls[0][0];
+  expect(constructorArgs).toEqual({ allowDeviceCredentials: false });
+});
+
 // biometrics.ts creates `rnBiometrics = new ReactNativeBiometrics(...)` at module load time.
 // Capture the mock instance returned by the constructor before any test can clear it.
 const bio = (ReactNativeBiometrics as jest.Mock).mock.results[0].value as {

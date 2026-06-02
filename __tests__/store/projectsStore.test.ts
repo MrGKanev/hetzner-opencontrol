@@ -8,7 +8,7 @@ jest.mock('../../src/api/servers', () => ({
 }));
 
 jest.mock('../../src/api/queryClient', () => ({
-  queryClient: { invalidateQueries: jest.fn(), removeQueries: jest.fn() },
+  queryClient: { invalidateQueries: jest.fn(), removeQueries: jest.fn(), clear: jest.fn() },
 }));
 
 jest.mock('../../src/hooks/useServersQuery', () => ({
@@ -16,7 +16,13 @@ jest.mock('../../src/hooks/useServersQuery', () => ({
 }));
 
 jest.mock('../../src/store/authStore', () => ({
-  useAuthStore: { setState: jest.fn() },
+  useAuthStore: {
+    setState: jest.fn(),
+    getState: jest.fn().mockReturnValue({
+      activateSession: jest.fn(),
+      deactivateSession: jest.fn(),
+    }),
+  },
 }));
 
 import * as Keychain from 'react-native-keychain';
@@ -28,6 +34,7 @@ import { useProjectsStore } from '../../src/store/projectsStore';
 
 const mockGetServers = getServers as jest.Mock;
 const mockKeychain = Keychain as jest.Mocked<typeof Keychain>;
+const mockAuthState = (useAuthStore.getState as jest.Mock)();
 
 const resetStore = () =>
   useProjectsStore.setState({
@@ -64,9 +71,16 @@ describe('addProject', () => {
     expect(activeProjectId).toBe(projects[0]!.id);
   });
 
-  it('signals isAuthenticated=true via authStore on success', async () => {
+  it('calls activateSession on authStore on success', async () => {
     await useProjectsStore.getState().addProject('Proj', 'tok');
-    expect((useAuthStore as any).setState).toHaveBeenCalledWith({ isAuthenticated: true });
+    expect(mockAuthState.activateSession).toHaveBeenCalled();
+  });
+
+  it('returns false immediately when isLoading=true (concurrent guard)', async () => {
+    useProjectsStore.setState({ isLoading: true });
+    const ok = await useProjectsStore.getState().addProject('Proj', 'tok');
+    expect(ok).toBe(false);
+    expect(createApiClient).not.toHaveBeenCalled();
   });
 
   it('sets error and returns false when getServers throws', async () => {
@@ -75,6 +89,12 @@ describe('addProject', () => {
     expect(ok).toBe(false);
     expect(useProjectsStore.getState().error).toBe('Bad token');
     expect(destroyApiClient).toHaveBeenCalled();
+  });
+
+  it('uses fallback error message when thrown value is not an Error', async () => {
+    mockGetServers.mockRejectedValueOnce('oops');
+    await useProjectsStore.getState().addProject('Proj', 'bad');
+    expect(useProjectsStore.getState().error).toBe('Invalid API key');
   });
 
   it('does not add a project on failure', async () => {
@@ -136,7 +156,7 @@ describe('removeProject', () => {
     });
   });
 
-  it('logs out when removing the last project', async () => {
+  it('clears query cache and calls deactivateSession when removing the last project', async () => {
     useProjectsStore.setState({
       projects: [{ id: 'p1', name: 'Only' }],
       activeProjectId: 'p1',
@@ -146,7 +166,8 @@ describe('removeProject', () => {
     expect(projects).toHaveLength(0);
     expect(activeProjectId).toBeNull();
     expect(destroyApiClient).toHaveBeenCalled();
-    expect((useAuthStore as any).setState).toHaveBeenCalledWith({ isAuthenticated: false });
+    expect(queryClient.clear).toHaveBeenCalled();
+    expect(mockAuthState.deactivateSession).toHaveBeenCalled();
   });
 
   it('switches to another project when active project is removed', async () => {
@@ -185,6 +206,23 @@ describe('switchProject', () => {
     expect(useProjectsStore.getState().activeProjectId).toBe('p1');
   });
 
+  it('calls activateSession on authStore after a successful switch', async () => {
+    (mockKeychain.getGenericPassword as jest.Mock).mockResolvedValueOnce({
+      username: 'apitoken',
+      password: 'tok',
+    });
+    useProjectsStore.setState({ projects: [{ id: 'p1', name: 'P1' }] });
+    await useProjectsStore.getState().switchProject('p1');
+    expect(mockAuthState.activateSession).toHaveBeenCalled();
+  });
+
+  it('returns false immediately when isLoading=true (concurrent guard)', async () => {
+    useProjectsStore.setState({ isLoading: true });
+    const ok = await useProjectsStore.getState().switchProject('p1');
+    expect(ok).toBe(false);
+    expect(createApiClient).not.toHaveBeenCalled();
+  });
+
   it('returns false and sets error when token not found in keychain', async () => {
     (mockKeychain.getGenericPassword as jest.Mock).mockResolvedValueOnce(false);
     useProjectsStore.setState({ projects: [{ id: 'p1', name: 'P1' }] });
@@ -205,6 +243,18 @@ describe('switchProject', () => {
     const ok = await useProjectsStore.getState().switchProject('p1');
     expect(ok).toBe(false);
     expect(destroyApiClient).toHaveBeenCalled();
+  });
+
+  it('uses fallback error message when thrown value is not an Error', async () => {
+    (mockKeychain.getGenericPassword as jest.Mock).mockResolvedValueOnce({
+      username: 'apitoken',
+      password: 'tok',
+    });
+    mockGetServers.mockRejectedValueOnce('not-an-error');
+    useProjectsStore.setState({ projects: [{ id: 'p1', name: 'P1' }] });
+
+    await useProjectsStore.getState().switchProject('p1');
+    expect(useProjectsStore.getState().error).toBe('Unknown error');
   });
 });
 

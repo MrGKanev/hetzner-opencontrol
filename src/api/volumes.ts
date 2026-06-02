@@ -1,18 +1,9 @@
 import { getApiClient } from "./client";
+import { fetchAllPages } from "./pagination";
 import type { Volume, Action } from "../models";
 
 export async function getVolumes(): Promise<Volume[]> {
-  const all: Volume[] = [];
-  let page = 1;
-  while (true) {
-    const res = await getApiClient().get("/volumes", {
-      params: { page, per_page: 50 },
-    });
-    all.push(...res.data.volumes);
-    if (!res.data.meta.pagination.next_page) break;
-    page++;
-  }
-  return all;
+  return fetchAllPages<Volume>("/volumes", "volumes");
 }
 
 export async function getVolume(id: number): Promise<Volume> {

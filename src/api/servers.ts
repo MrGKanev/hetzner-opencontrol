@@ -1,4 +1,5 @@
 import { getApiClient } from "./client";
+import { fetchAllPages } from "./pagination";
 import type {
   Server,
   ServerMetrics,
@@ -12,17 +13,7 @@ import type {
 // ─── List ────────────────────────────────────────────────────────────────────
 
 export async function getServers(): Promise<Server[]> {
-  const all: Server[] = [];
-  let page = 1;
-  while (true) {
-    const res = await getApiClient().get("/servers", {
-      params: { page, per_page: 50 },
-    });
-    all.push(...res.data.servers);
-    if (!res.data.meta.pagination.next_page) break;
-    page++;
-  }
-  return all;
+  return fetchAllPages<Server>("/servers", "servers");
 }
 
 export async function getServer(id: number): Promise<Server> {
@@ -126,17 +117,12 @@ export async function deleteServer(id: number): Promise<Action> {
 // ─── Activity Log ────────────────────────────────────────────────────────────
 
 export async function getServerActions(serverId: number): Promise<Action[]> {
-  const all: Action[] = [];
-  let page = 1;
-  while (true) {
-    const res = await getApiClient().get(`/servers/${serverId}/actions`, {
-      params: { page, per_page: 50, sort: "id:desc" },
-    });
-    all.push(...res.data.actions);
-    if (!res.data.meta?.pagination?.next_page || all.length >= 100) break;
-    page++;
-  }
-  return all;
+  return fetchAllPages<Action>(
+    `/servers/${serverId}/actions`,
+    "actions",
+    { sort: "id:desc" },
+    100,
+  );
 }
 
 // ─── Metrics ─────────────────────────────────────────────────────────────────
@@ -208,23 +194,11 @@ export async function getServerTypes(): Promise<ServerType[]> {
 // ─── Images ───────────────────────────────────────────────────────────────────
 
 export async function getImages(type?: string): Promise<Image[]> {
-  const all: Image[] = [];
-  let page = 1;
-  while (true) {
-    const res = await getApiClient().get("/images", {
-      params: {
-        page,
-        per_page: 50,
-        type,
-        architecture: "x86",
-        status: "available",
-      },
-    });
-    all.push(...res.data.images);
-    if (!res.data.meta.pagination.next_page) break;
-    page++;
-  }
-  return all;
+  return fetchAllPages<Image>("/images", "images", {
+    type,
+    architecture: "x86",
+    status: "available",
+  });
 }
 
 // ─── ISOs ─────────────────────────────────────────────────────────────────────

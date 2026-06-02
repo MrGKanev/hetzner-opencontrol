@@ -1,18 +1,9 @@
 import { getApiClient } from "./client";
+import { fetchAllPages } from "./pagination";
 import type { SSHKey } from "../models";
 
 export async function getSshKeys(): Promise<SSHKey[]> {
-  const all: SSHKey[] = [];
-  let page = 1;
-  while (true) {
-    const res = await getApiClient().get("/ssh_keys", {
-      params: { page, per_page: 50 },
-    });
-    all.push(...res.data.ssh_keys);
-    if (!res.data.meta.pagination.next_page) break;
-    page++;
-  }
-  return all;
+  return fetchAllPages<SSHKey>("/ssh_keys", "ssh_keys");
 }
 
 export async function createSshKey(

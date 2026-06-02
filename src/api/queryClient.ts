@@ -6,7 +6,7 @@ export const queryClient = new QueryClient({
     onError: (error, query) => {
       // Only surface errors when there's no cached data (background refetch failures are silent)
       if (query.state.data === undefined) {
-        useToastStore.getState().show((error as Error).message ?? "Request failed");
+        useToastStore.getState().show(error instanceof Error ? error.message : "Request failed");
       }
     },
   }),

@@ -9,6 +9,10 @@ jest.mock('../../src/api/servers', () => ({
   getServers: jest.fn(),
 }));
 
+jest.mock('../../src/api/queryClient', () => ({
+  queryClient: { clear: jest.fn() },
+}));
+
 jest.mock('../../src/services/biometrics', () => ({
   getBiometricType: jest.fn(() => Promise.resolve('none')),
   authenticateWithBiometrics: jest.fn(() => Promise.resolve(true)),
@@ -23,6 +27,7 @@ jest.mock('../../src/store/projectsStore', () => ({
 import { useAuthStore } from '../../src/store/authStore';
 import { createApiClient, destroyApiClient } from '../../src/api/client';
 import { getServers } from '../../src/api/servers';
+import { queryClient } from '../../src/api/queryClient';
 import {
   getBiometricType,
   authenticateWithBiometrics,
@@ -138,6 +143,62 @@ describe('useAuthStore', () => {
       useAuthStore.setState({ error: 'some error' });
       await useAuthStore.getState().logout();
       expect(useAuthStore.getState().error).toBeNull();
+    });
+
+    it('clears the query cache before destroying the client', async () => {
+      await useAuthStore.getState().logout();
+      expect(queryClient.clear).toHaveBeenCalled();
+    });
+  });
+
+  // ── activateSession ──────────────────────────────────────────────────────────
+
+  describe('activateSession', () => {
+    it('sets isAuthenticated=true', () => {
+      useAuthStore.getState().activateSession();
+      expect(useAuthStore.getState().isAuthenticated).toBe(true);
+    });
+
+    it('subscribes to AppState changes for session timeout', () => {
+      const { AppState } = require('react-native');
+      useAuthStore.getState().activateSession();
+      expect(AppState.addEventListener).toHaveBeenCalledWith('change', expect.any(Function));
+    });
+
+    it('removes any existing AppState listener before adding a new one', () => {
+      const { AppState } = require('react-native');
+      useAuthStore.getState().activateSession();
+      const firstRemove = (AppState.addEventListener as jest.Mock).mock.results[0].value.remove;
+      useAuthStore.getState().activateSession();
+      expect(firstRemove).toHaveBeenCalled();
+    });
+  });
+
+  // ── deactivateSession ────────────────────────────────────────────────────────
+
+  describe('deactivateSession', () => {
+    it('sets isAuthenticated=false', () => {
+      useAuthStore.setState({ isAuthenticated: true });
+      useAuthStore.getState().deactivateSession();
+      expect(useAuthStore.getState().isAuthenticated).toBe(false);
+    });
+
+    it('clears error state', () => {
+      useAuthStore.setState({ isAuthenticated: true, error: 'something' });
+      useAuthStore.getState().deactivateSession();
+      expect(useAuthStore.getState().error).toBeNull();
+    });
+
+    it('removes the AppState listener set by activateSession', () => {
+      const { AppState } = require('react-native');
+      useAuthStore.getState().activateSession();
+      const removeStub = (AppState.addEventListener as jest.Mock).mock.results[0].value.remove;
+      useAuthStore.getState().deactivateSession();
+      expect(removeStub).toHaveBeenCalled();
+    });
+
+    it('does not throw when called without a prior activateSession', () => {
+      expect(() => useAuthStore.getState().deactivateSession()).not.toThrow();
     });
   });
 

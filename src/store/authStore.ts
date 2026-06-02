@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { Platform, AppState, type AppStateStatus } from "react-native";
 import * as Keychain from "react-native-keychain";
 import { createApiClient, destroyApiClient } from "../api/client";
+import { queryClient } from "../api/queryClient";
 import { getServers } from "../api/servers";
 import {
   authenticateWithBiometrics,
@@ -23,6 +24,8 @@ interface AuthState {
   tryRestoreSession: () => Promise<boolean>;
   unlockWithBiometrics: () => Promise<boolean>;
   clearError: () => void;
+  activateSession: () => void;
+  deactivateSession: () => void;
 }
 
 let backgroundedAt: number | null = null;
@@ -83,7 +86,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
               }
             : {
                 service: KEYCHAIN_SERVICE,
-                storage: Keychain.STORAGE_TYPE.AES,
+                storage: Keychain.STORAGE_TYPE.AES_GCM_NO_AUTH,
                 accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
               };
         await Keychain.setGenericPassword("apitoken", token, keychainOptions);
@@ -101,6 +104,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   logout: async () => {
+    queryClient.clear();
     stopSessionWatch();
     await Keychain.resetGenericPassword({ service: KEYCHAIN_SERVICE });
     destroyApiClient();
@@ -186,4 +190,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   clearError: () => set({ error: null }),
+
+  activateSession: () => {
+    startSessionWatch(() => get().logout());
+    set({ isAuthenticated: true });
+  },
+
+  deactivateSession: () => {
+    stopSessionWatch();
+    set({ isAuthenticated: false, error: null });
+  },
 }));

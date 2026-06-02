@@ -1,7 +1,7 @@
 import ReactNativeBiometrics, { BiometryTypes } from "react-native-biometrics";
 
 const rnBiometrics = new ReactNativeBiometrics({
-  allowDeviceCredentials: true,
+  allowDeviceCredentials: false,
 });
 
 export type BiometricType = "FaceID" | "TouchID" | "Biometrics" | "none";

@@ -1,18 +1,9 @@
 import { getApiClient } from "./client";
+import { fetchAllPages } from "./pagination";
 import type { FloatingIP, Action } from "../models";
 
 export async function getFloatingIps(): Promise<FloatingIP[]> {
-  const all: FloatingIP[] = [];
-  let page = 1;
-  while (true) {
-    const res = await getApiClient().get("/floating_ips", {
-      params: { page, per_page: 50 },
-    });
-    all.push(...res.data.floating_ips);
-    if (!res.data.meta.pagination.next_page) break;
-    page++;
-  }
-  return all;
+  return fetchAllPages<FloatingIP>("/floating_ips", "floating_ips");
 }
 
 export async function assignFloatingIp(

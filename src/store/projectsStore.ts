@@ -23,7 +23,7 @@ function keychainOptions(id: string): Keychain.SetOptions {
       }
     : {
         service: keychainService(id),
-        storage: Keychain.STORAGE_TYPE.RSA,
+        storage: Keychain.STORAGE_TYPE.AES_GCM_NO_AUTH,
         accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
       };
 }
@@ -52,6 +52,7 @@ export const useProjectsStore = create<ProjectsState>()(
       error: null,
 
       addProject: async (name: string, token: string) => {
+        if (get().isLoading) return false;
         set({ isLoading: true, error: null });
         try {
           // Validate token
@@ -73,13 +74,12 @@ export const useProjectsStore = create<ProjectsState>()(
 
           queryClient.invalidateQueries({ queryKey: SERVERS_KEY });
 
-          // Signal authenticated
           const { useAuthStore } = require("./authStore");
-          useAuthStore.setState({ isAuthenticated: true });
+          useAuthStore.getState().activateSession();
           return true;
-        } catch (e: any) {
+        } catch (e: unknown) {
           destroyApiClient();
-          set({ isLoading: false, error: e.message || "Invalid API key" });
+          set({ isLoading: false, error: e instanceof Error ? e.message : "Invalid API key" });
           return false;
         }
       },
@@ -96,10 +96,10 @@ export const useProjectsStore = create<ProjectsState>()(
             await get().switchProject(remaining[0]!.id);
           } else {
             destroyApiClient();
-            queryClient.removeQueries({ queryKey: SERVERS_KEY });
+            queryClient.clear();
             set({ projects: [], activeProjectId: null });
             const { useAuthStore } = require("./authStore");
-            useAuthStore.setState({ isAuthenticated: false });
+            useAuthStore.getState().deactivateSession();
           }
         } else {
           set({ projects: remaining });
@@ -115,6 +115,7 @@ export const useProjectsStore = create<ProjectsState>()(
       },
 
       switchProject: async (id: string) => {
+        if (get().isLoading) return false;
         set({ isLoading: true, error: null });
         try {
           const credentials = await Keychain.getGenericPassword({
@@ -131,11 +132,11 @@ export const useProjectsStore = create<ProjectsState>()(
           queryClient.invalidateQueries({ queryKey: SERVERS_KEY });
 
           const { useAuthStore } = require("./authStore");
-          useAuthStore.setState({ isAuthenticated: true });
+          useAuthStore.getState().activateSession();
           return true;
-        } catch (e: any) {
+        } catch (e: unknown) {
           destroyApiClient();
-          set({ isLoading: false, error: e.message });
+          set({ isLoading: false, error: e instanceof Error ? e.message : "Unknown error" });
           return false;
         }
       },
