@@ -69,6 +69,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         // trigger a biometric/passcode prompt while the spinner is showing, causing
         // the app to hang silently. Biometric gate is enforced manually in
         // unlockWithBiometrics before we ever read the key back.
+        // Do NOT use STORAGE_TYPE.RSA on Android — it sets setUserAuthenticationRequired(true)
+        // on the Keystore key (5-second validity), which causes react-native-keychain to show
+        // its own BiometricPrompt inside getGenericPassword. That conflicts with our manual
+        // biometric gate in unlockWithBiometrics and crashes the app.
+        // AES storage uses hardware-backed encryption without per-access auth requirements;
+        // our biometric gate is the security layer.
         const keychainOptions: Keychain.SetOptions =
           Platform.OS === "ios"
             ? {
@@ -77,7 +83,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
               }
             : {
                 service: KEYCHAIN_SERVICE,
-                storage: Keychain.STORAGE_TYPE.RSA,
+                storage: Keychain.STORAGE_TYPE.AES,
                 accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
               };
         await Keychain.setGenericPassword("apitoken", token, keychainOptions);
